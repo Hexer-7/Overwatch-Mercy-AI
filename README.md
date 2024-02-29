@@ -3,8 +3,12 @@
 
 #### Description:
 Overwatch Mercy AI is an artificial intelligence bot designed to enhance Mercy's capabilities, making her appear stronger (OP). If you're using Mercy and your ally's health is low, the bot automatically prompts Mercy to increase healing. Additionally, when your ally's health is fully restored (or nearing full), Mercy switches to damage boost mode.
-
+  
 Here is video for example: [Here 👀](https://www.youtube.com/embed/EXC9dg-d7_c)
+
+
+#### Release:
+For the latest release and downloadable files, visit the [Download release](https://github.com/hexer-7/overwatch-mercy-ai/releases).
 
 #### Purpose:
 The idea behind the bot may seem peculiar, but it's simply a concept that I thought of and wanted to implement. The bot is virus-free for those who enjoy embodying the character of Conan.
@@ -24,11 +28,6 @@ The idea behind the bot may seem peculiar, but it's simply a concept that I thou
 
 - Avoid using yellow or blue for the health bar color to prevent potential issues with the bot.
 
-
-
-
-#### Release:
-For the latest release and downloadable files, visit the [release page](https://github.com/hexer-7/overwatch-mercy-ai/releases).
 
 #### Notes:
 - The bot's file size is relatively large (~100 MB), but the benefits are worth it.
