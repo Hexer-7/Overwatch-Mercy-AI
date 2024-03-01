@@ -141,7 +141,7 @@ def filter_color(image):
 
     # Function to continuously capture the screen, analyze images, and perform actions
 def capture_screen(reference_image_path):
-    global run,threshold,left,right
+    global threshold,left,right
     reference_image = cv2.imread(reference_image_path, cv2.IMREAD_GRAYSCALE)
     reference_image = cv2.resize(reference_image, (width, high))
 
@@ -151,34 +151,17 @@ def capture_screen(reference_image_path):
 
 
         region = {'left': x, 'top': y, 'width': width, 'height': high}
-        run = False
-        print("\n")
-        print(f"The Bot is paused, Run it with toggle button '{toggle}'")
+
         while True:
 
-
-            if keyboard.is_pressed(toggle):
-
-                pyautogui.mouseUp(button='right')
-                pyautogui.mouseUp(button='left')
-                right = False
-                left = False
-                if run:
-                    run = False
-                else:
-                    run = True
-                time.sleep(0.1)
-            if not run:
-                time.sleep(0.05)
-                continue
-            while not keyboard.is_pressed(run_btn):
-
+            if not keyboard.is_pressed(run_btn):
                 if right or left:
                     pyautogui.mouseUp(button='right')
                     pyautogui.mouseUp(button='left')
                     right = False
                     left = False
-                time.sleep(0.1)
+                while not keyboard.is_pressed(run_btn):
+                    time.sleep(0.07)
             img = np.array(sct.grab(region))
             img = cv2.resize(img, (width, high))
 
@@ -238,12 +221,9 @@ if __name__ == "__main__":
             os.system('cls')
             run_btn = input("Type the Button you want to Run the Bot while pressing it(Like: b, 2,num 1 or f2 (Not Mouse Button!):")
             print("\n")
-            toggle = input("Type the Button you want to toggle pausing the Bot (Like: b, 2,num 1 or f2 (Not Mouse Button!):")
             threshold = 0.40
             os.system('cls')
-            print(f"Press '{toggle}' to toggle pause the Bot")
-            print("\n")
-            print(f"Press '{run_btn}' to pause the Bot while you pressing '{run_btn}'")
+            print(f"Now you can Run the Bot while you pressing '{run_btn}'")
             mouse_listener_thread = threading.Thread(target=start_listener)
             mouse_listener_thread.start()
             capture_screen(f'{selected_resolution}/{selected_color}.png')
