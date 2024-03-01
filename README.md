@@ -2,7 +2,19 @@
 ### Overwatch Mercy AI
 
 #### Description:
-Overwatch Mercy AI is an artificial intelligence bot designed to enhance Mercy's capabilities, making her appear stronger (OP). If you're using Mercy and your ally's health is low, the bot automatically prompts Mercy to increase healing. Additionally, when your ally's health is fully restored (or nearing full), Mercy switches to damage boost mode.
+Overwatch Mercy AI is a smart helper known as "Mercy AI" designed for a game.
+
+It's particularly useful in tight situations. 
+
+The bot keeps a close watch on the health of teammates being healed by the in-game character "Mercy." 
+
+If a teammate's health is low, the program automatically assists Mercy in healing by mimicking a mouse click. 
+
+Once the healing is complete or near completion, the bot prompts Mercy to switch to a mode that automatically boosts damage.
+
+Think of it as having a reliable digital companion that efficiently manages these actions, allowing the player to focus on the game. 
+
+Simply turn on the bot, and it takes care of everything, making it especially handy during intense gameplay and challenging victories!
   
 Here is video for example: [Here 👀](https://www.youtube.com/embed/EXC9dg-d7_c)
 
