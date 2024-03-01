@@ -10,6 +10,9 @@ Here is video for example: [Here 👀](https://www.youtube.com/embed/EXC9dg-d7_c
 #### Release:
 For the latest release and downloadable files, visit the [Download release](https://github.com/hexer-7/overwatch-mercy-ai/releases).
 
+#### Important:
+if you have truble with Mercy AI (not working in game) try to set game on fullscreen (not borderless) and then restart the game
+
 #### Purpose:
 The idea behind the bot may seem peculiar, but it's simply a concept that I thought of and wanted to implement. The bot is virus-free for those who enjoy embodying the character of Conan.
 
