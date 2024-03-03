@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<data>
+    <res>
+        <high>8</high>
+        <width>8</width>
+        <x>699</x>
+        <y>501</y>
+    </res>
+    <images>
+        <image name="AQUA.png">
+            <RGB>(94, 74, 255)</RGB>
+        </image>
+        <image name="BLUE (FRIENDLY DEFAULT).png">
+            <RGB>(46, 239, 255)</RGB>
+        </image>
+        <image name="BLUE (SHEILD DEFAULT).png">
+            <RGB>(6, 208, 255)</RGB>
+        </image>
+        <image name="GOLD.png">
+            <RGB>(255, 241, 10)</RGB>
+        </image>
+        <image name="GREEN (OVERHEALTH DEFAULT).png">
+            <RGB>(58, 250, 93)</RGB>
+        </image>
+        <image name="GREEN.png">
+            <RGB>(6, 193, 150)</RGB>
+        </image>
+        <image name="LIME GREEN.png">
+            <RGB>(230, 255, 9)</RGB>
+        </image>
+        <image name="MAGENTA.png">
+            <RGB>(255, 61, 255)</RGB>
+        </image>
+        <image name="NEON BLUE.png">
+            <RGB>(9, 255, 255)</RGB>
+        </image>
+        <image name="ORANGE (ARMOR DEFAULT).png">
+            <RGB>(255, 148, 13)</RGB>
+        </image>
+        <image name="ORANGE.png">
+            <RGB>(240, 137, 9)</RGB>
+        </image>
+        <image name="PINK.png">
+            <RGB>(255, 126, 224)</RGB>
+        </image>
+        <image name="PURPLE.png">
+            <RGB>(144, 9, 145)</RGB>
+        </image>
+        <image name="RED (ENEMY DEFAULT).png">
+            <RGB>(255, 56, 94)</RGB>
+        </image>
+        <image name="TAWNY.png">
+            <RGB>(240, 104, 11)</RGB>
+        </image>
+        <image name="WHITE.png">
+            <RGB>(255, 255, 255)</RGB>
+        </image>
+        <image name="YELLOW.png">
+            <RGB>(255, 255, 9)</RGB>
+        </image>
+    </images>
+</data>
