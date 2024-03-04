@@ -49,6 +49,7 @@ The idea behind the bot may seem peculiar, but it's simply a concept that I thou
 
 -Then you just have to hold left click and Mercy AI will take care of your ally's :)
 
+Note: i extreamly recommand to use white color, Because other colors is not stable :(
 
 #### Notes:
 - Mercy AI size is relatively large (~70 MB), but the benefits are worth it.
