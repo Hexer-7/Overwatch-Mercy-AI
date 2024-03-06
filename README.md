@@ -32,16 +32,17 @@ The idea behind the bot may seem peculiar, but it's simply a concept that I thou
 - Automatically adjusts Mercy's actions based on ally health status.
 - Increases healing or damage boost as needed.
 - Ensures virus-free operation.
-- Customizable settings for screen resolution and Mercy's health bar color.
+- Customizable settings for screen resolution.
 - Allows users to pause Mercy AI with F2.
 
 
 #### Requirements:
 - Supported screen resolutions: 4K (2160), 2K (1440), FHD (1080), HD+ (768).
 - Mercy's health bar color must be consistent (avoid using multiple colors for different functions).
-  ![Overwatch 2 Screenshot 2024](https://github.com/Hexer-7/Overwatch-Mercy-AI/assets/130850854/5c89dbdd-0466-4585-8bf1-ef8c85d71111)
+  ![Overwatch 2 Screenshot](https://github.com/Hexer-7/Overwatch-Mercy-AI/assets/130850854/6c239ae8-1055-48c2-82eb-faa3c2662985)
   ![Overwatch 2 Screenshot 2024 03 01 - 00 13 10 96](https://github.com/Hexer-7/Overwatch-Mercy-AI/assets/130850854/59921cdd-dd2e-4267-b456-4c6dea90799c)
-  # Avoid using yellow or blue for the health bar color to prevent potential issues with the bot.
+
+- use white color only for health bar*.
 
 - You have to choose another buttons for heal and damage boost in game and type it on Mercy AI, For example:
 ![Overwatch 2 Screenshot ](https://github.com/Hexer-7/Overwatch-Mercy-AI/assets/130850854/9bc249a2-3e97-40dd-9a18-76190a2bdc32)
@@ -49,10 +50,9 @@ The idea behind the bot may seem peculiar, but it's simply a concept that I thou
 
 -Then you just have to hold left click and Mercy AI will take care of your ally's :)
 
-Note: i extreamly recommand to use white color, Because other colors is not stable :(
 
 #### Notes:
-- Mercy AI size is relatively large (~70 MB), but the benefits are worth it.
+- Mercy AI size is relatively large (~80 MB), but the benefits are worth it.
 - Users must provide feedback and report any issues encountered during usage.
 
 #### Contact:
