@@ -148,7 +148,7 @@ def filter_color(image):
 
 # Function to create a shaded image based on a list of coordinates
 def create_shaded_image(locations_array):
-    image = Image.new('RGBA', (13, 13), (255, 255, 255, 0))
+    image = Image.new('RGBA', (width, high), (255, 255, 255, 0))
     shaded_pixels = locations_array
 
     for pixel in shaded_pixels:
@@ -201,6 +201,7 @@ def capture_screen(reference_image_path):
 
             if time_difference >= 0.2:  # Add a delay of at least 0.2 seconds between decisions
                 if max_val > threshold:
+
                     if not damage_boost:
                         keyboard.press(damage_boost_btn)
                         damage_boost = True
