@@ -1,0 +1,136 @@
+<?xml version="1.0" ?>
+<data>
+    <res>
+        <high>8</high>
+        <width>8</width>
+        <x>701</x>
+        <y>504</y>
+    </res>
+    <bomb_res>
+        <high>12</high>
+        <width>12</width>
+        <x>677</x>
+        <y>512</y>
+    </bomb_res>
+    <bomb_locations>
+        <coord x="0" y="0"/>
+        <coord x="4" y="0"/>
+        <coord x="9" y="0"/>
+        <coord x="10" y="0"/>
+        <coord x="11" y="0"/>
+        <coord x="4" y="1"/>
+        <coord x="5" y="1"/>
+        <coord x="6" y="1"/>
+        <coord x="7" y="1"/>
+        <coord x="8" y="1"/>
+        <coord x="9" y="1"/>
+        <coord x="10" y="1"/>
+        <coord x="11" y="1"/>
+        <coord x="4" y="2"/>
+        <coord x="5" y="2"/>
+        <coord x="6" y="2"/>
+        <coord x="7" y="2"/>
+        <coord x="8" y="2"/>
+        <coord x="9" y="2"/>
+        <coord x="10" y="2"/>
+        <coord x="11" y="2"/>
+        <coord x="4" y="3"/>
+        <coord x="5" y="3"/>
+        <coord x="6" y="3"/>
+        <coord x="7" y="3"/>
+        <coord x="8" y="3"/>
+        <coord x="9" y="3"/>
+        <coord x="0" y="4"/>
+        <coord x="1" y="4"/>
+        <coord x="2" y="4"/>
+        <coord x="3" y="4"/>
+        <coord x="4" y="4"/>
+        <coord x="5" y="4"/>
+        <coord x="6" y="4"/>
+        <coord x="7" y="4"/>
+        <coord x="8" y="4"/>
+        <coord x="11" y="4"/>
+        <coord x="0" y="5"/>
+        <coord x="1" y="5"/>
+        <coord x="2" y="5"/>
+        <coord x="3" y="5"/>
+        <coord x="4" y="5"/>
+        <coord x="5" y="5"/>
+        <coord x="6" y="5"/>
+        <coord x="7" y="5"/>
+        <coord x="8" y="5"/>
+        <coord x="10" y="5"/>
+        <coord x="11" y="5"/>
+        <coord x="0" y="6"/>
+        <coord x="1" y="6"/>
+        <coord x="2" y="6"/>
+        <coord x="3" y="6"/>
+        <coord x="4" y="6"/>
+        <coord x="5" y="6"/>
+        <coord x="6" y="6"/>
+        <coord x="7" y="6"/>
+        <coord x="9" y="6"/>
+        <coord x="10" y="6"/>
+        <coord x="11" y="6"/>
+        <coord x="0" y="7"/>
+        <coord x="1" y="7"/>
+        <coord x="2" y="7"/>
+        <coord x="3" y="7"/>
+        <coord x="4" y="7"/>
+        <coord x="5" y="7"/>
+        <coord x="6" y="7"/>
+        <coord x="8" y="7"/>
+        <coord x="9" y="7"/>
+        <coord x="10" y="7"/>
+        <coord x="11" y="7"/>
+        <coord x="0" y="8"/>
+        <coord x="1" y="8"/>
+        <coord x="2" y="8"/>
+        <coord x="3" y="8"/>
+        <coord x="4" y="8"/>
+        <coord x="5" y="8"/>
+        <coord x="0" y="9"/>
+        <coord x="1" y="9"/>
+        <coord x="2" y="9"/>
+        <coord x="3" y="9"/>
+        <coord x="7" y="9"/>
+        <coord x="0" y="10"/>
+        <coord x="1" y="10"/>
+        <coord x="2" y="10"/>
+        <coord x="3" y="10"/>
+        <coord x="5" y="10"/>
+        <coord x="6" y="10"/>
+        <coord x="7" y="10"/>
+        <coord x="0" y="11"/>
+        <coord x="1" y="11"/>
+        <coord x="2" y="11"/>
+        <coord x="5" y="11"/>
+        <coord x="6" y="11"/>
+        <coord x="7" y="11"/>
+    </bomb_locations>
+    <locations>
+        <coord x="0" y="0"/>
+        <coord x="1" y="0"/>
+        <coord x="2" y="0"/>
+        <coord x="3" y="0"/>
+        <coord x="0" y="1"/>
+        <coord x="1" y="1"/>
+        <coord x="2" y="1"/>
+        <coord x="0" y="2"/>
+        <coord x="1" y="2"/>
+        <coord x="0" y="3"/>
+        <coord x="1" y="3"/>
+        <coord x="0" y="4"/>
+        <coord x="7" y="4"/>
+        <coord x="6" y="5"/>
+        <coord x="7" y="5"/>
+        <coord x="5" y="6"/>
+        <coord x="6" y="6"/>
+        <coord x="7" y="6"/>
+        <coord x="0" y="7"/>
+        <coord x="1" y="7"/>
+        <coord x="5" y="7"/>
+        <coord x="6" y="7"/>
+        <coord x="7" y="7"/>
+    </locations>
+</data>
