@@ -12,7 +12,7 @@
         <x>952</x>
         <y>721</y>
     </bomb_res>
-    <locations>
+    <bomb_locations>
         <coord x="5" y="0"/>
         <coord x="6" y="0"/>
         <coord x="7" y="0"/>
@@ -172,7 +172,7 @@
         <coord x="8" y="15"/>
         <coord x="9" y="15"/>
         <coord x="10" y="15"/>
-    </locations>
+    </bomb_locations>
 
     <locations>
         <coord x="0" y="0"/>
