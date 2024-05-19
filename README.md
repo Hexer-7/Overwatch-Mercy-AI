@@ -1,5 +1,5 @@
 ### Overwatch Mercy AI
-![image](https://github.com/Hexer-7/Overwatch-Mercy-AI/assets/130850854/596888ff-8dff-455b-9819-6b025c3fd5bb)
+![Overwatch Mercy AI](https://github.com/Hexer-7/Overwatch-Mercy-AI/assets/130850854/596888ff-8dff-455b-9819-6b025c3fd5bb)
 
 #### Description:
 The Mercy AI is a smart assistant designed for Overwatch 2, enabling automatic packet healing for allies with AI (not hack). It's particularly useful in tight situations. 
