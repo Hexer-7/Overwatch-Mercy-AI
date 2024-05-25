@@ -25,7 +25,7 @@ The idea behind the bot may seem peculiar, but it's simply a concept that I thou
 - Switches to damage boost when an ally is affected by Ana's grenade.
 - Increases healing or damage boost as needed.
 - Ensures virus-free operation.
-- Customizable settings for screen resolution and Mercy's health bar color.
+- Customizable settings for screen resolution
 - Allows users to pause Mercy AI with F2.
 
 #### Requirements:
@@ -33,7 +33,7 @@ The idea behind the bot may seem peculiar, but it's simply a concept that I thou
 - Mercy's health bar color must be consistent (avoid using multiple colors for different functions).
   ![image](https://github.com/Hexer-7/Overwatch-Mercy-AI/assets/130850854/e04ea6af-83d0-4fc0-bf93-e7d14587c55e)
   ![Overwatch 2 Screenshot 2024 03 01 - 00 13 10 96](https://github.com/Hexer-7/Overwatch-Mercy-AI/assets/130850854/59921cdd-dd2e-4267-b456-4c6dea90799c)
-  **Avoid using yellow or blue for the health bar color to prevent potential issues with the bot.**
+
 
 - You have to choose other buttons for heal and damage boost in-game and set them in Mercy AI. For example:
   ![image](https://github.com/Hexer-7/Overwatch-Mercy-AI/assets/130850854/901a38b7-e73d-4ec0-bfb9-a1752e58a01c)
