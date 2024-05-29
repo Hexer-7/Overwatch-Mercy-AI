@@ -1,4 +1,4 @@
-  # Import necessary libraries
+# Import necessary libraries
 try:
     import sys
     import time
@@ -11,6 +11,9 @@ try:
     import os
     import xml.etree.ElementTree as ET
     import subprocess
+    from PIL import Image
+    from xml.dom import minidom
+
 except ImportError as e:
     import subprocess
 
@@ -30,266 +33,374 @@ except ImportError as e:
     import threading
     import os
     import xml.etree.ElementTree as ET
-
+    from PIL import Image
+    from xml.dom import minidom
 
     # Initialize global variables
 damage_boost = False
 heal = False
 stop = False
 run = False
-    # Function to display available resolutions and get user input
+mouse_btn = False
+version = "1.4.0"
+
+def create_default_config():
+    root = ET.Element("config")
+    comment = ET.Comment("You can adjust the percentage to switch to damage boost from 1 To 10. (you can type float numbers like '6.3')"
+                         " The percentage is approximate and not precise, so you can experiment with the percentage you prefer!")
+    root.append(comment)
+    threshold = ET.SubElement(root, "mercy_bar_percentage")
+    threshold.text = "10"
+    comment = ET.Comment("this button for toggle pause code.")
+    root.append(comment)
+    pause_toggle_button = ET.SubElement(root, "pause_toggle_button")
+    pause_toggle_button.text = "f2"
+    comment = ET.Comment("this button for running mercy ai when you in game.")
+    root.append(comment)
+    comment = ET.Comment("visit https://pastebin.com/2qtsWPND for all keymap of keybaord.")
+    root.append(comment)
+    keybind_btn = ET.SubElement(root, "keybind_btn")
+    keybind_btn.text = "left_mouse"
+    heal_btn = ET.SubElement(root, "heal_btn")
+    heal_btn.text = current_key('Press \033[0;33mHeal Button (Primary weapon)\033[0m: ','\033[0;33m')
+    damage_boost_btn = ET.SubElement(root, "damage_boost_btn")
+    damage_boost_btn.text = current_key('Press \033[036mDamage Boost Button (Secondary weapon)\033[0m: ','\033[036m')
+    comment = ET.Comment("this is resolution of game,[2160,1440,1080,768]")
+    root.append(comment)
+    resolution = ET.SubElement(root, "resolution")
+    resolution.text = display_resolutions()
+
+
+    xml_str = minidom.parseString(ET.tostring(root)).toprettyxml(indent="    ")
+
+    with open("config.xml", "w") as xml_file:
+        xml_file.write(xml_str)
+
+
+def read_config():
+    tree = ET.parse("config.xml")
+    root = tree.getroot()
+    threshold = float(root.find("mercy_bar_percentage").text)
+    pause_toggle_button = root.find("pause_toggle_button").text
+    keybind_btn = root.find("keybind_btn").text
+    damage_boost_btn = root.find("damage_boost_btn").text
+    heal_btn = root.find("heal_btn").text
+    selected_resolution = root.find("resolution").text
+
+    return selected_resolution,heal_btn,damage_boost_btn,keybind_btn,threshold, pause_toggle_button
+
+
+# Function to display available resolutions and get user input
 def display_resolutions():
-    print_gradual_text("""
-    Important:
+    os.system('cls')
+    print("""
+    \033[0;31mImportant\033[0;0m:
         you have to set the game on Fullscreen if have troubles with Mercy AI
 
-Now you have to Choose the Resolution of your game 
-    4K = 2160
-    2K = 1440
-    FHD = 1080
-    HD+ = 768
-    
-    """,0.003)
-    print_gradual_text("Choose a Resolution:")
+    Now you have to Choose the Resolution of your game 
+        4K = 2160
+        2K = 1440
+        FHD = 1080
+        HD+ = 768
+
+    """)
+    print("Choose a Resolution:")
     resolutions = ["2160", "1440", "1080", "768"]
     for i, res in enumerate(resolutions, start=1):
-        print(f"{i}. {res}")
-
+        print(f"{i}. \033[0;32m{res}\033[0;0m")
+    # for skip enters of button choosing
     selected_resolution_index = int(input("Enter the number of your choice: "))
     selected_resolution = resolutions[selected_resolution_index - 1]
-
+    os.system('cls')
     return selected_resolution
 
-    # Function to load information from an XML file based on the selected resolution
+
+# Function to load information from an XML file based on the selected resolution
 def load_info_from_xml(resolution):
-    xml_path = os.path.join('data',resolution, "info.xml")
+    xml_path = os.path.join('data', resolution, "info.xml")
 
     if not os.path.exists(xml_path):
-        print_gradual_text(f"Error: Missing info.xml file in {resolution} folder.")
+        print(f"Error: Missing info.xml file in {resolution} folder.")
         return None
 
     tree = ET.parse(xml_path)
     root = tree.getroot()
 
-    data_element = root.find("res")
+    res_element = root.find("res")
+    bomb_res_element = root.find("bomb_res")
+    if res_element and bomb_res_element:
+        high = int(res_element.find("high").text)
+        width = int(res_element.find("width").text)
+        x = int(res_element.find("x").text)
+        y = int(res_element.find("y").text)
+        bomb_high = int(bomb_res_element.find("high").text)
+        bomb_width = int(bomb_res_element.find("width").text)
+        bomb_x = int(bomb_res_element.find("x").text)
+        bomb_y = int(bomb_res_element.find("y").text)
+        return bomb_high,bomb_width,bomb_x,bomb_y,high, width, x, y
 
-    if data_element is not None:
-        high = int(data_element.find("high").text)
-        width = int(data_element.find("width").text)
-        x = int(data_element.find("x").text)
-        y = int(data_element.find("y").text)
-
-        return high, width, x, y
-
-    print_gradual_text(f"Error: Information for resolution {resolution} not found.")
+    print(f"Error: Information for resolution {resolution} not found.")
     return None
 
-    # Function to display available colors from an XML file and get user input
-def display_colors(xml_path):
-    tree = ET.parse(xml_path)
-    root = tree.getroot()
+def threshold_translator(value, from_min=1, from_max=10, to_min=0.2, to_max=0.99):
+    scale = (to_max - to_min) / (from_max - from_min)
+    return float(to_min + (value - from_min) * scale)
 
-    colors = []
-    print_gradual_text('''
-The color we're talking about is the one on Mercy's bar in the middle of the screen, showing your teammate's Health.
 
-(See a picture on my GitHub @Hexer-7)
+def keybind():
+    global run, stop
+    while True:
+        time.sleep(0.06)
+        if not stop:
+            if keyboard.is_pressed(keybind_btn):
+                run = True
+            else:
+                run = False
 
-Make sure the whole bar has the same color for shield, health, overhealth, and armor.
- Pick the color from the menu with the same name.
 
-As said before, avoid using yellow or blue; they're not recommended and can be unstable.    
-''')
-    print_gradual_text("Choose the color of ally health bar:")
-    for i, image in enumerate(root.findall(".//images/image"), start=1):
-        color_name = image.get("name").split(".")[0]
-        colors.append(color_name)
-        print_gradual_text(f"{i}. {color_name}")
-
-    selected_index = int(input("Enter the number of your choice: "))
-
-    if 1 <= selected_index <= len(colors):
-        selected_color = colors[selected_index - 1]
-        color_node = root.find(f".//images/image[@name='{selected_color}.png']/RGB")
-        if color_node is not None:
-            selected_rgb = tuple(map(int, color_node.text[1:-1].split(',')))
-            return selected_color, selected_rgb
-
-    print_gradual_text("Invalid choice. Please enter a valid number.")
-    return None, None
-
-    # Mouse click callback function to update global variables based on button press/release events
+# Mouse click callback function to update global variables based on button press/release events
 def on_click(x, y, button, pressed):
-    global run,stop
-
+    global run, stop
     if not stop:
-        if button == button.left:
+        if button == button.left and keybind_btn == 'left_mouse':
+            if pressed:
+                run = True
+            else:
+                run = False
+        elif button == button.right and keybind_btn == 'right_mouse':
             if pressed:
                 run = True
             else:
                 run = False
 
 
-    # Function to start a listener thread for mouse clicks
+# Function to start a listener thread for mouse clicks
 def start_listener():
     with Listener(on_click=on_click) as listener:
         listener.join()
 
-    # Function to print gradual text
-def print_gradual_text(text, delay=0.003):
-    for char in text:
-        print(char, end='', flush=True)
-        time.sleep(delay)
-    print()
 
+def current_key(text,color):
+    text_button = """
+    Now you have to add damage boost and heal buttons
+
+    Add an extra button next to the mouse button in the game;
+
+    \033[31mit should not be the mouse button itself.\033[0m
+
+    Like: p or 4 or f4 or anything you want
+
+    see github page for more information @Hexer-7
+                """
+    print(text_button)
+    print(text)
+    while True:
+        event = keyboard.read_event()
+
+        if event.event_type == keyboard.KEY_DOWN:
+            if event.name == 'enter':
+                input()
+                os.system('cls')
+                return current_key
+            current_key = event.name
+            sys.stdout.write('\r' + ' [ '+ f'{color}{current_key}\033[0m' +' ]'+' ' * 10 + '\r')
+            sys.stdout.flush()
+
+
+
+# Function to print the state of the Mercy AI (Running/Stopped)
 def print_state():
     global stop
-    message = 'Mercy AI is \033[31mStopped\033[0m' if stop else 'Mercy AI is \033[32mRunning\033[0m'
-    sys.stdout.write('\r' + message + ' ' * (len(message) - len('Mercy AI is stopped')) + '\r')
+    message = '    Mercy AI is \033[31mStopped\033[0m' if stop else '    Mercy AI is \033[32mRunning\033[0m'
+    sys.stdout.write('\r' + message + ' ' * (len(message) - len('    Mercy AI is stopped')) + '\r')
     sys.stdout.flush()
 
-    # Function to filter the input image based on a target color
-def filter_color(image):
-    global Target_color
-    # Ensure the image is in BGR format
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-
-    target_r, target_g, target_b = Target_color
-
-    # Define a range around the target color
-    color_range = 30
-
-    lower = np.array([max(0, target_r - color_range),
-                      max(0, target_g - color_range),
-                      max(0, target_b - color_range)])
-    upper = np.array([min(255, target_r + color_range),
-                      min(255, target_g + color_range),
-                      min(255, target_b + color_range)])
-
+# Function to filter the input image based on a target color and apply a filter image
+def filter_color(image, filter_image_path,add_blur=False):
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    lower = np.array([230, 230, 230])
+    upper = np.array([255, 255, 255])
     mask = cv2.inRange(image, lower, upper)
-    color_filtered = cv2.bitwise_and(image, image, mask=mask)
-    color_filtered_binary = cv2.cvtColor(color_filtered, cv2.COLOR_BGR2GRAY)
-    _, color_filtered_binary = cv2.threshold(color_filtered_binary, 1, 255, cv2.THRESH_BINARY)
-    return color_filtered_binary
+    image = cv2.bitwise_and(image, image, mask=mask)
 
-    # Function to continuously capture the screen, analyze images, and perform actions
-def capture_screen(reference_image_path):
-    global threshold,heal,damage_boost,run,stop
-    reference_image = cv2.imread(reference_image_path, cv2.IMREAD_GRAYSCALE)
-    reference_image = cv2.resize(reference_image, (width, high))
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    _, image = cv2.threshold(image, 0, 255, cv2.THRESH_BINARY)
 
-    reference_image = reference_image.astype(np.uint8)
-    last_action_time = time.time()
+    filter_image = Image.open(filter_image_path).convert("RGBA")
 
+    image_pil = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_GRAY2RGBA))
+    combined_image = Image.alpha_composite(image_pil, filter_image)
+    if add_blur:
+        combined_image = np.array(combined_image)
+        combined_image = cv2.GaussianBlur(combined_image, (41, 41), 0)
+        combined_image = Image.fromarray(combined_image)
+
+    return combined_image
+
+def read_and_filter_images(health_bar_image_path,health_bar_filter_image_path,anas_bomb_image_path,anas_bomb_filter_image_path):
+    health_bar_image = cv2.imread(health_bar_image_path)
+    health_bar_image = cv2.resize(health_bar_image, (width, high))
+    health_bar_image = filter_color(health_bar_image, health_bar_filter_image_path,add_blur=True)
+    health_bar_image = np.array(health_bar_image)
+
+    anas_bomb_image = cv2.imread(anas_bomb_image_path)
+    anas_bomb_image = cv2.resize(anas_bomb_image, (bomb_width, bomb_high))
+    anas_bomb_image = filter_color(anas_bomb_image, anas_bomb_filter_image_path)
+    anas_bomb_image = np.array(anas_bomb_image)
+    return health_bar_image,anas_bomb_image
+
+def ana_boomb_check(bomb_region,anas_bomb_filter_image_path,anas_bomb_image):
+    # Capture and process Ana's bomb
     with mss.mss() as sct:
+        bomb_img = np.array(sct.grab(bomb_region))
+        bomb_img = cv2.resize(bomb_img, (bomb_width, bomb_high))
+        bomb_color_filtered_binary = filter_color(bomb_img, anas_bomb_filter_image_path)
+        bomb_color_filtered_binary = np.array(bomb_color_filtered_binary)
+        bomb_result = cv2.matchTemplate(bomb_color_filtered_binary, anas_bomb_image, cv2.TM_CCOEFF_NORMED)
+        bomb_min_val, bomb_max_val, bomb_min_loc, bomb_max_loc = cv2.minMaxLoc(bomb_result)
+        return bomb_max_val
 
+def mercy_bar_check(region,health_bar_filter_image_path,health_bar_image):
+    with mss.mss() as sct:
+        global color_filtered_binary
+        img = np.array(sct.grab(region))
+        img = cv2.resize(img, (width, high))
+        color_filtered_binary = filter_color(img, health_bar_filter_image_path,add_blur=True)
+        color_filtered_binary = np.array(color_filtered_binary)
+        result = cv2.matchTemplate(color_filtered_binary, health_bar_image, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    return min_val
 
-        region = {'left': x, 'top': y, 'width': width, 'height': high}
+def capture_screen(health_bar_image_path, anas_bomb_image_path, health_bar_filter_image_path, anas_bomb_filter_image_path):
+    global threshold, heal, damage_boost, run, stop
 
-        while True:
+    health_bar_image,anas_bomb_image = read_and_filter_images(health_bar_image_path, health_bar_filter_image_path,
+                                                              anas_bomb_image_path,anas_bomb_filter_image_path)
 
-            if not run:
-                if damage_boost or heal:
+    last_action_time = time.time()
+    region = {'left': x, 'top': y, 'width': width, 'height': high}
+    bomb_region = {'left': bomb_x, 'top': bomb_y, 'width': bomb_width, 'height': bomb_high}
+
+    while True:
+        if not run:
+            if damage_boost or heal:
+                keyboard.release(damage_boost_btn)
+                keyboard.release(heal_btn)
+                damage_boost = False
+                heal = False
+            while not run:
+                if keyboard.is_pressed(pause_toggle_button):
+                    stop = not stop
+                    print_state()
+                    while keyboard.is_pressed(pause_toggle_button):
+                        time.sleep(0.01)
+                time.sleep(0.07)
+        if stop:
+            continue
+        max_val = mercy_bar_check(region, health_bar_filter_image_path, health_bar_image)
+        bomb_max_val = ana_boomb_check(bomb_region, anas_bomb_filter_image_path, anas_bomb_image)
+        if max_val >= 0.999:
+            max_val=1.0
+        current_time = time.time()
+        time_difference = current_time - last_action_time
+        if time_difference >= 0.2:  # Add a delay of at least 0.2 seconds between decisions
+            if (max_val >= threshold) or (bomb_max_val >= bomb_threshold):
+                if not damage_boost:
+                    keyboard.press(damage_boost_btn)
+                    damage_boost = True
+                    last_action_time = current_time
+            else:
+                if damage_boost:
+
                     keyboard.release(damage_boost_btn)
-                    keyboard.release(heal_btn)
                     damage_boost = False
-                    heal = False
-                while not run:
-                    if keyboard.is_pressed('f2'):
-                        stop = not stop
-                        print_state()
-                        time.sleep(0.7)
-                    time.sleep(0.07)
-            if stop:
-                continue
-            img = np.array(sct.grab(region))
-            img = cv2.resize(img, (width, high))
 
-            color_filtered_binary1 = filter_color(img)
-            color_filtered_binary = color_filtered_binary1.astype(np.uint8)
-            result = cv2.matchTemplate(color_filtered_binary, reference_image, cv2.TM_CCOEFF_NORMED)
-            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-
-            current_time = time.time()
-            time_difference = current_time - last_action_time
-
-            if time_difference >= 0.2:  # Add a delay of at least 0.2 seconds between decisions
-                if max_val > threshold:
-                    if not damage_boost:
-                        keyboard.press(damage_boost_btn)
-                        damage_boost = True
-                        last_action_time = current_time
-                else:
-                    if damage_boost:
-                        keyboard.release(damage_boost_btn)
-                        damage_boost = False
-
-                    if not heal:
-                        keyboard.press(heal_btn)
-                        heal = True
-                        last_action_time = current_time
+                if not heal:
+                    keyboard.press(heal_btn)
+                    heal = True
+                    last_action_time = current_time
 
 
-    # Main script
+# Main script
 if __name__ == "__main__":
-    global high, width, x, y,Target_color
-    mouse_listener_thread = threading.Thread(target=start_listener)
-    mouse_listener_thread.start()
-    text = """
-    
-Please read the following carefully:
-Mercy AI is completely free and open source.
 
-I do not recommend using similar colors to \033[33myellow\033[0m or \033[34mblue\033[0m,
-due to similarity with the colors of Mercy's weapon.
+    text = f"""
+
+Please read the following carefully:
+Mercy AI is completely free and open source. on github @Hexer-7
 
 The code is an artificial intelligence that boosts damage if the allies' health is complete or close,
 otherwise, it switches Mercy's weapon to increase health.
 
-The code is currently in beta, and there may be unintended errors.
-If you have any feedback, contact me on my Instagram DM (_1_B) or TikTok (__hex).
+you can adjust damage boost switch percentage in config file.
+version:{version}
+
+\033[31mUse \033[0mwhite\033[31m color for health bar,shield,armor,overhealth (White only), Not [BLUE (FRIENDLY DEFAULT)], or etc.\033[0m
+
+\033[32mIf you wanna reset config file, Delete it.\033[0m
+
+If you have any feedback, contact me on my Instagram DM (_1_B) or @Hexer-7 on github.
 
 \nPress ENTER to continue.
     """
 
-    print_gradual_text(text,0.003)
+    print(text)
     input()
     os.system('cls')
-    selected_resolution = display_resolutions()
+    if not os.path.isfile("config.xml"):
+        create_default_config()
+
+    # Read config values
+    selected_resolution, heal_btn, damage_boost_btn, keybind_btn, threshold, pause_toggle_button = read_config()
+    threshold = threshold_translator(threshold)
+
+    bomb_threshold = float(0.77)
     info = load_info_from_xml(selected_resolution)
-
     if info:
-        high, width, x, y = info
+        bomb_high, bomb_width, bomb_x, bomb_y, high, width, x, y = info
+
         os.system('cls')
-        xml_path = os.path.join("data",selected_resolution, "info.xml")
+        if keybind_btn == "left_mouse" or keybind_btn == "right_mouse":
+            mouse_listener_thread = threading.Thread(target=start_listener)
+            mouse_listener_thread.start()
+        else:
+            keybind_thread = threading.Thread(target=keybind)
+            keybind_thread.start()
+        if keybind_btn == "left_mouse":
+            mouse_btn = "Mouse Left click"
+        elif keybind_btn == "right_mouse":
+            mouse_btn = "Mouse Right click"
+        UI = """
+                                    \033[31m    lj<                          \033[31m+jI\033[90m
+                                   \033[31m     .?\\t~     \033[90m`~)xXUUXx)~'     \033[31m_f\-\033[90m
+                                   \033[31m     '!I_t(  \033[90m:v*888&&&&888on"  \033[31m\\t+Il.\033[90m
+                                  \033[31m      '>>;  \033[90mIX#8*oooooooooo*8*c,  \033[31mI>>\033[90m
+                                 \033[31m       `l  \033[90mlUW&*o************o*8MX;  \033[31m!'\033[90m
+                                          iLW&oo****************o*&WUl
+                                        +0%8#####**************###*#8%L<
+                                      ]Z8Mmdkbbbk&&****MM****&WbbbbkdmW80-
+                                     CB&oo(      ~0**M%$$%M**Q<      |oo8BY
+                                    ?rvq#MW0{,     xB@$@@$@Br     ;)ZWM#wuj_
+                                    (/|\\vw*88Mhddh*B$$$$$$$$B*hddaW88*wu\|/)
+                                    {rt/|\\umoo*&$$$$o*oooooo$$$@&*oomn||/tr}
+                                     <\jt/|(u#@$$@$@(;>~~i;|$@@$$@*n(|/tj|>
+                                       >|jjcLh%$$$$$*t    j#$$$$$%hLvjj|i
+                                         >Ubq0Zk8$$@$$@~?$$$@$$8kOQwdXi
+                                           -Jdw0Ob8$$Ll  >0$$&bO0wpY+
+                                             +Ydqwmv; '{}. IzmwwpX~
+                                               <zf^ :\\nrrn|, "rzi
+                                                   '<~~++~~<. 
 
-        selected_color, Target_color = display_colors(xml_path)
-
-        if selected_color and Target_color:
-            os.system('cls')
-            text_button = """
-Now you have to add damage boost and heal buttons
-            
-Add an extra button next to the mouse button in the game;
-            
-it should not be the mouse button itself.
-
-Like: p or num 1 or 4 or f4 or anything you want
-
-see github page for more information @Hexer-7
-
-            """
-            print_gradual_text(text_button,0.003)
-            damage_boost_btn = input('Enter Damage Boost Button: ')
-            heal_btn = input('Enter Heal Button: ')
-            threshold = 0.50
-            os.system('cls')
-            print_gradual_text(f'Now you can Run Mercy AI With Holding "Mouse Left click"')
-            print_gradual_text(f'and you can pause Mercy AI with "F2"\n')
-            print_state()
-            capture_screen(f'data/{selected_resolution}/{selected_color}.png')
-
+               """
+        print(f"\033[90m{UI}\033[0m")
+        print(f'    Now you can Run Mercy AI With Holding', (f'"{mouse_btn}"' if mouse_btn else f'"{keybind_btn}"'))
+        print(f'    and you can toggle pause Mercy AI with "{pause_toggle_button}"\n')
+        print_state()
+        capture_screen(
+            f'data/{selected_resolution}/white.png',
+            f'data/{selected_resolution}/ana_bomb.png',
+            f'data/{selected_resolution}/white_filter.png',
+            f'data/{selected_resolution}/ana_bomb_filter.png'
+        )
     else:
-        print_gradual_text("Exiting due to missing info.xml.")
-
-
+        print("Error: Resources not found!")
