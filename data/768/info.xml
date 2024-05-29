@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<data>
+    <res>
+        <high>56</high>
+        <width>64</width>
+        <x>650</x>
+        <y>457</y>
+    </res>
+    <bomb_res>
+        <high>12</high>
+        <width>12</width>
+        <x>677</x>
+        <y>512</y>
+    </bomb_res>
+</data>
