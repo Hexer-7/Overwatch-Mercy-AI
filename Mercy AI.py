@@ -13,6 +13,10 @@ try:
     import subprocess
     from PIL import Image
     from xml.dom import minidom
+    import pygetwindow as gw
+    import psutil
+    import win32process
+    import win32gui
 
 except ImportError as e:
     import subprocess
@@ -23,6 +27,9 @@ except ImportError as e:
     subprocess.call(['pip', 'install', 'keyboard'])
     subprocess.call(['pip', 'install', 'pynput'])
     subprocess.call(['pip', 'install', 'numpy'])
+    subprocess.call(['pip', 'install', 'pygetwindow'])
+    subprocess.call(['pip', 'install', 'psutil'])
+    subprocess.call(['pip', 'install', 'pywin32'])
 
     import time
     import cv2
@@ -35,6 +42,10 @@ except ImportError as e:
     import xml.etree.ElementTree as ET
     from PIL import Image
     from xml.dom import minidom
+    import pygetwindow as gw
+    import psutil
+    import win32process
+    import win32gui
 
     # Initialize global variables
 damage_boost = False
@@ -51,6 +62,10 @@ def create_default_config():
     root.append(comment)
     threshold = ET.SubElement(root, "mercy_bar_percentage")
     threshold.text = "10"
+    comment = ET.Comment("Enable this if you want mercy AI pause while overwatch unfocused (BETA).")
+    root.append(comment)
+    is_focus_enabled = ET.SubElement(root,"disable_mercyAI_while_overwatch_unfocused")
+    is_focus_enabled.text = "0"
     comment = ET.Comment("this button for toggle pause code.")
     root.append(comment)
     pause_toggle_button = ET.SubElement(root, "pause_toggle_button")
@@ -80,6 +95,7 @@ def create_default_config():
 def read_config():
     tree = ET.parse("config.xml")
     root = tree.getroot()
+    is_focus_enabled = int(root.find("disable_mercyAI_while_overwatch_unfocused").text)
     threshold = float(root.find("mercy_bar_percentage").text)
     pause_toggle_button = root.find("pause_toggle_button").text
     keybind_btn = root.find("keybind_btn").text
@@ -87,7 +103,7 @@ def read_config():
     heal_btn = root.find("heal_btn").text
     selected_resolution = root.find("resolution").text
 
-    return selected_resolution,heal_btn,damage_boost_btn,keybind_btn,threshold, pause_toggle_button
+    return is_focus_enabled,selected_resolution,heal_btn,damage_boost_btn,keybind_btn,threshold, pause_toggle_button
 
 
 # Function to display available resolutions and get user input
@@ -207,6 +223,31 @@ def current_key(text,color):
             sys.stdout.flush()
 
 
+def get_window_process_name(hwnd):
+    try:
+        _, pid = win32process.GetWindowThreadProcessId(hwnd)
+        process = psutil.Process(pid)
+        return process.name()
+    except Exception as e:
+        return None
+
+def is_window_focused(window):
+    focused_window_hwnd = win32gui.GetForegroundWindow()
+    return window._hWnd == focused_window_hwnd
+
+def is_overwatch_focused():
+    try:
+        all_windows = gw.getAllWindows()
+        overwatch_window = None
+        for window in all_windows:
+            process_name = get_window_process_name(window._hWnd)
+            if process_name == "Overwatch.exe":
+                if is_window_focused(window):
+                    return True
+        return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
 
 # Function to print the state of the Mercy AI (Running/Stopped)
 def print_state():
@@ -272,7 +313,7 @@ def mercy_bar_check(region,health_bar_filter_image_path,health_bar_image):
     return min_val
 
 def capture_screen(health_bar_image_path, anas_bomb_image_path, health_bar_filter_image_path, anas_bomb_filter_image_path):
-    global threshold, heal, damage_boost, run, stop
+    global threshold, heal, damage_boost, run, stop,is_focus_enabled
 
     health_bar_image,anas_bomb_image = read_and_filter_images(health_bar_image_path, health_bar_filter_image_path,
                                                               anas_bomb_image_path,anas_bomb_filter_image_path)
@@ -297,6 +338,9 @@ def capture_screen(health_bar_image_path, anas_bomb_image_path, health_bar_filte
                 time.sleep(0.07)
         if stop:
             continue
+        if is_focus_enabled :
+            if not is_overwatch_focused():
+                continue
         max_val = mercy_bar_check(region, health_bar_filter_image_path, health_bar_image)
         bomb_max_val = ana_boomb_check(bomb_region, anas_bomb_filter_image_path, anas_bomb_image)
         if max_val >= 0.999:
@@ -351,9 +395,12 @@ If you have any feedback, contact me on my Instagram DM (_1_B) or @Hexer-7 on gi
         create_default_config()
 
     # Read config values
-    selected_resolution, heal_btn, damage_boost_btn, keybind_btn, threshold, pause_toggle_button = read_config()
+    is_focus_enabled,selected_resolution, heal_btn, damage_boost_btn, keybind_btn, threshold, pause_toggle_button = read_config()
     threshold = threshold_translator(threshold)
-
+    if is_focus_enabled == 1:
+        is_focus_enabled = True
+    else:
+        is_focus_enabled = False
     bomb_threshold = float(0.77)
     info = load_info_from_xml(selected_resolution)
     if info:
