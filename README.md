@@ -49,4 +49,3 @@ The idea behind the bot may seem peculiar, but it's simply a concept that I thou
 #### Contact:
 For any inquiries or feedback, feel free to reach out:
 - Instagram: _1_B
-- TikTok: __Hex
