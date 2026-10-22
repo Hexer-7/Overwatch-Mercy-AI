@@ -1,0 +1,543 @@
+/* SPDX-License-Identifier: Apache-2.0
+ * Copyright (c) 2024-2026 Hexer-7 */
+
+/* Mercy AI desktop window.
+ *
+ * Every rule lives here as a class, not an inline `style`: the window changes
+ * state constantly, and the JavaScript only ever toggles an attribute.
+ *
+ * Anything visual that depends on state is expressed as `[data-x="true"]` so
+ * that the whole active/inactive vocabulary is readable in one file instead of
+ * being reconstructed from a paint function.
+ *
+ * Every colour is a token, so dark mode is a short override rather than a
+ * rewrite: `:root` holds the light values, `[data-theme="dark"]` overrides the
+ * same names, and nothing else in this file changes.
+ */
+
+:root {
+  /* Neutral greys, with one colour: wine, the icon's dark pink pulled
+     toward red. Dark mode below uses the same rule. */
+  --ink: #1d1f20;
+  --ink-16: rgba(29, 31, 32, 0.16);
+  --ink-10: rgba(29, 31, 32, 0.1);
+  --ink-08: rgba(29, 31, 32, 0.08);
+  --ink-55: rgba(29, 31, 32, 0.55);
+  --ink-70: rgba(29, 31, 32, 0.7);
+  --accent: #8a1c3c;
+  --accent-deep: #66132b;
+  /* Accent as text, and what sits on an accent fill. */
+  --accent-text: #8a1c3c;
+  --on-accent: #f2f2f3;
+  --accent-ink: #1d1f20;
+  --accent-tint: rgba(138, 28, 60, 0.1);
+  --panel: #e9e9ea;
+  --page: #f2f2f3;
+  --danger: #b3323c;
+  --on-dark: #f2f2f3;
+  --scroll: rgba(29, 31, 32, 0.38);
+  --scroll-hover: rgba(29, 31, 32, 0.55);
+  --backdrop: rgba(0, 0, 0, 0.45);
+  /* The design system's own tokens, so .btn / .card / .tag follow along. */
+  --color-bg: #f2f2f3;
+  --color-surface: #e9e9ea;
+  --color-text: #1d1f20;
+  --color-accent: #8a1c3c;
+  --color-divider: rgba(29, 31, 32, 0.16);
+}
+
+[data-theme="dark"] {
+  --ink: #e8e8ea;
+  --ink-16: rgba(232, 232, 234, 0.18);
+  --ink-10: rgba(232, 232, 234, 0.12);
+  --ink-08: rgba(232, 232, 234, 0.09);
+  --ink-55: rgba(232, 232, 234, 0.55);
+  --ink-70: rgba(232, 232, 234, 0.72);
+  /* The same wine as light mode for fills; a lighter step of it for
+     accent text, which the darker one is too dim to carry on grey. */
+  --accent: #8a1c3c;
+  --accent-deep: #a32a4d;
+  --accent-text: #da6c8c;
+  --on-accent: #f2f2f3;
+  --accent-ink: #121417;
+  --accent-tint: rgba(138, 28, 60, 0.22);
+  --panel: #21262c;
+  --page: #191d22;
+  --danger: #e06b74;
+  --on-dark: #f2f2f3;
+  --backdrop: rgba(0, 0, 0, 0.6);
+  --scroll: rgba(232, 232, 234, 0.32);
+  --scroll-hover: rgba(232, 232, 234, 0.5);
+  --color-bg: #191d22;
+  --color-surface: #21262c;
+  --color-text: #e8e8ea;
+  --color-accent: #8a1c3c;
+  --color-divider: rgba(232, 232, 234, 0.18);
+}
+
+html, body { height: 100%; }
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--page);
+  color: var(--ink);
+  font-family: "Barlow", system-ui, sans-serif;
+  /* A native window is not a document: text selection and the rubber-band
+     overscroll both make it feel like a web page embedded by mistake. */
+  user-select: none;
+  -webkit-user-select: none;
+  overscroll-behavior: none;
+  cursor: default;
+}
+.app { display: flex; flex-direction: column; height: 100vh; background: var(--page); }
+[hidden] { display: none !important; }
+.screen { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+/* No focus ring anywhere: the window is driven with the mouse, and the
+   ring the web view draws on whatever has focus (the first tab, at launch)
+   only looks like a selection nobody made. */
+*:focus, *:focus-visible { outline: none !important; }
+
+/* — title bar — */
+.titlebar {
+  display: flex; align-items: stretch; height: 36px; flex: none;
+  border-bottom: 1px solid var(--ink-16); background: var(--panel);
+}
+.titlebar-brand {
+  display: flex; align-items: center; gap: 9px;
+  padding-left: 12px; flex: 1; min-width: 0;
+}
+.brand-icon { width: 16px; height: 16px; flex: none; display: block; }
+.brand-name {
+  font: 600 13px/1 "Barlow Condensed", system-ui, sans-serif;
+  letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap;
+}
+.brand-version { font: 400 10px/1 "Barlow", system-ui, sans-serif; color: var(--ink-55); }
+.winbtn {
+  width: 44px; height: 36px; padding: 0; flex: none;
+  border: 0; border-left: 1px solid var(--ink-10); border-radius: 0;
+  background: transparent; color: var(--ink);
+}
+.winbtn:hover { background: var(--ink-08); }
+.winbtn.is-close:hover { background: var(--danger); color: #fff; }
+
+/* — tabs — */
+.tabs {
+  display: flex; flex: none; gap: 2px; padding: 0 12px;
+  border-bottom: 1px solid var(--ink-16); background: var(--page);
+}
+.tab {
+  border: 0; border-radius: 0; border-bottom: 2px solid transparent;
+  padding: 9px 11px 7px; background: transparent;
+  font-size: 12px; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--ink-55);
+}
+.tab:hover { background: var(--ink-08); }
+.tab[data-active="true"] { border-bottom-color: var(--accent); color: var(--ink); }
+
+/* — panes — */
+.pane {
+  flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto;
+  display: flex; flex-direction: column;
+}
+.pane-status { padding: 18px 20px; gap: 14px; }
+.pane-settings { padding: 18px 20px 22px; gap: 16px; }
+.pane-about { padding: 22px 20px; gap: 16px; }
+.pane-wizard { padding: 12px 22px 0; gap: 14px; }
+
+/* Scrollbar: wide and dark enough to grab and to notice. */
+.pane::-webkit-scrollbar { width: 11px; }
+.pane::-webkit-scrollbar-thumb { background: var(--scroll); border: 3px solid var(--page); }
+.pane::-webkit-scrollbar-thumb:hover { background: var(--scroll-hover); }
+.pane::-webkit-scrollbar-track { background: transparent; }
+
+/* — shared type — */
+.kicker {
+  font: 400 10px/1 "Barlow", system-ui, sans-serif;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-text);
+}
+.metric-label {
+  font: 400 10px/1 "Barlow", system-ui, sans-serif;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-55);
+}
+.metric-value {
+  font: 600 15px/1 "Barlow Condensed", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+.divider { height: 1px; background: var(--ink-16); flex: none; }
+.note { font: 400 12.5px/1.45 "Barlow", system-ui, sans-serif; }
+.fine { font: 400 11.5px/1.5 "Barlow", system-ui, sans-serif; color: var(--ink-55); }
+.muted { color: var(--ink-55); }
+.mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
+
+/* — status — */
+.plate { padding: 16px; display: flex; flex-direction: column; gap: 7px; }
+.state-word {
+  font: 600 44px/0.9 "Barlow Condensed", system-ui, sans-serif; letter-spacing: -0.01em;
+}
+.state-word[data-state="PAUSED"] { color: var(--ink-55); }
+.state-word[data-state="STOPPED"] { color: var(--danger); }
+.plate-metrics {
+  display: flex; gap: 28px; margin-top: 6px; padding-top: 10px;
+  border-top: 1px solid var(--ink-10);
+}
+.plate-metric { display: flex; flex-direction: column; gap: 5px; }
+.mode-word[data-mode="BOOST"] { color: var(--accent-text); }
+.mode-word[data-mode="IDLE"], .mode-word[data-mode="—"] { color: var(--ink-55); }
+
+.bars { display: flex; flex-direction: column; gap: 11px; }
+.bar-head { display: flex; align-items: baseline; justify-content: space-between; }
+.bar { position: relative; border: 1px solid var(--ink-16); background: var(--panel); }
+.bar-health { height: 26px; margin-bottom: 13px; }
+.bar-fill {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--accent);
+}
+.bar-tick { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--ink); }
+.bar-tick-label {
+  position: absolute; bottom: -14px; white-space: nowrap;
+  font: 400 9px/1 "Barlow", system-ui, sans-serif;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-55);
+}
+
+.hint-card { padding: 13px 14px; display: flex; align-items: center; gap: 12px; }
+.hint-card svg { flex: none; }
+.hint-card .note { flex: 1; min-width: 0; }
+.hint-card strong { font-weight: 700; }
+.run-btn {
+  width: 100%; justify-content: center; padding: 11px; margin-top: auto;
+  font-size: 12px; letter-spacing: 0.11em; text-transform: uppercase;
+}
+
+/* Outside every scrolling pane, so it cannot scroll away. */
+.statusbar {
+  flex: none; display: flex; align-items: center; justify-content: space-between;
+  padding: 9px 20px; border-top: 1px solid var(--ink-16); background: var(--panel);
+}
+.statusbar-item {
+  display: flex; align-items: center; gap: 6px;
+  font: 400 10.5px/1 "Barlow", system-ui, sans-serif;
+  letter-spacing: 0.06em; color: var(--ink-55);
+}
+.statusbar-item svg { flex: none; }
+.statusbar-item[data-warn="true"] { color: var(--danger); font-weight: 500; }
+
+/* — settings — */
+.dial-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+.dial-head label { font: 400 12px/1 "Barlow", system-ui, sans-serif; color: var(--ink-70); }
+.dial-head span {
+  font: 600 16px/1 "Barlow Condensed", system-ui, sans-serif; font-variant-numeric: tabular-nums;
+}
+input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
+.dial-scale {
+  display: flex; justify-content: space-between;
+  font: 400 10px/1 "Barlow", system-ui, sans-serif; color: var(--ink-55);
+}
+
+.field > label { color: var(--ink-70); }
+.input { background: var(--panel); color: var(--ink); border-color: var(--ink-16); }
+.key-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.key-btn {
+  width: 100%; justify-content: space-between;
+  font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px;
+  text-transform: none; letter-spacing: 0; color: var(--ink);
+}
+.key-btn.is-word { font-family: "Barlow", system-ui, sans-serif; }
+.key-btn small {
+  font: 400 10px/1 "Barlow", system-ui, sans-serif;
+  letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.5;
+}
+.key-btn[data-capture="true"] { border-color: var(--accent); background: var(--accent-tint); }
+
+.res-row { display: flex; border: 1px solid var(--ink-16); }
+.res-opt {
+  flex: 1; border: 0; border-radius: 0; padding: 8px 0;
+  font-size: 13px; background: transparent; color: var(--ink);
+}
+.res-opt + .res-opt { border-left: 1px solid var(--ink-16); }
+.res-opt[data-active="true"] { background: var(--accent); color: var(--on-accent); }
+.field-note {
+  font: 400 10.5px/1.4 "Barlow", system-ui, sans-serif; color: var(--ink-55); margin-top: 5px;
+}
+.field-note[data-warn="true"] { color: var(--danger); font-weight: 500; }
+
+.switch-list { display: flex; flex-direction: column; }
+.switch-row {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--ink-08);
+}
+.switch-row:last-child, .switch-row.is-bare { border-bottom: 0; }
+.switch-text { flex: 1; min-width: 0; }
+.switch-title { font: 400 13px/1.3 "Barlow", system-ui, sans-serif; }
+.switch-sub { font: 400 10.5px/1.4 "Barlow", system-ui, sans-serif; color: var(--ink-55); }
+.switch {
+  flex: none; width: 42px; height: 22px; padding: 0; position: relative;
+  border: 1px solid var(--ink-16); border-radius: 0; background: var(--panel);
+}
+.switch[data-switch="true"] { background: var(--accent); border-color: var(--accent); }
+.switch .knob {
+  position: absolute; top: 2px; bottom: 2px; left: 2px; width: 16px;
+  display: block; background: var(--ink-55); transition: left 0.12s ease;
+}
+.switch[data-switch="true"] .knob { background: var(--on-accent); left: 22px; }
+
+.group-card { padding: 14px; display: flex; flex-direction: column; gap: 11px; }
+.group-body { display: flex; flex-direction: column; gap: 12px; }
+.trigger-row { display: flex; border: 1px solid var(--ink-16); }
+.trigger-opt {
+  flex: 1; border: 0; border-radius: 0; padding: 9px 6px;
+  flex-direction: column; gap: 2px; background: transparent; color: var(--ink);
+}
+.trigger-opt + .trigger-opt { border-left: 1px solid var(--ink-16); }
+.trigger-opt span:first-child { font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; }
+.trigger-opt span:last-child { font: 400 9.5px/1 "Barlow", system-ui, sans-serif; opacity: 0.6; }
+.trigger-opt[data-active="true"] { background: var(--accent); color: var(--on-accent); }
+
+.advanced-toggle {
+  width: 100%; justify-content: space-between; color: var(--ink);
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.advanced-card { padding: 14px; display: flex; flex-direction: column; gap: 12px; margin-top: -6px; }
+.adv-group {
+  display: flex; flex-direction: column; gap: 10px;
+  padding-top: 12px; border-top: 1px solid var(--ink-10);
+}
+.adv-group .switch-row { padding: 2px 0; }
+.res-alert {
+  display: flex; align-items: center; gap: 12px; flex: none;
+  background: var(--accent-ink); color: var(--on-dark); padding: 11px 13px;
+  font: 400 12.5px/1.45 "Barlow", system-ui, sans-serif;
+}
+.res-alert span { flex: 1; min-width: 0; }
+.res-alert .btn { flex: none; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+.adv-field {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 9px 0; border-bottom: 1px solid var(--ink-08);
+}
+.adv-field:last-of-type { border-bottom: 0; }
+.adv-head { display: flex; align-items: center; gap: 10px; }
+.adv-name { flex: 1; min-width: 0; font: 400 12.5px/1.3 "Barlow", system-ui, sans-serif; }
+.adv-field .input { width: 96px; flex: none; min-height: 30px; font-size: 12.5px; }
+.adv-desc { font: 400 10.5px/1.45 "Barlow", system-ui, sans-serif; color: var(--ink-55); }
+/* The setting worked out against the player's own numbers. */
+.adv-live { font: 500 11px/1.45 "Barlow", system-ui, sans-serif; color: var(--accent-text); }
+.adv-error { font: 500 11px/1.45 "Barlow", system-ui, sans-serif; color: var(--danger); }
+.tool-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Reset: only ever beside a setting that differs from its default. Two
+   classes, so the late `.btn { color }` below cannot repaint its text. */
+.btn.reset-btn {
+  flex: none; padding: 3px 8px; border: 0; border-radius: 0;
+  background: var(--accent); color: var(--on-accent);
+  font: 600 9.5px/1.2 "Barlow", system-ui, sans-serif;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.btn.reset-btn:hover { background: var(--accent-deep); }
+/* Out of sight but still in the layout, so nothing moves when it appears. */
+.btn.reset-btn:not([data-shown="true"]) { visibility: hidden; pointer-events: none; }
+/* A label with its Reset beside it. The height is the button's, so the row
+   does not jump when it appears. */
+.field-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  min-height: 20px; margin-bottom: 5px;
+}
+.field-head label { font-size: 12px; color: var(--ink-70); }
+.dial-head .reset-btn { margin-left: auto; margin-right: 10px; align-self: center; }
+.trigger-line { display: flex; align-items: center; gap: 10px; }
+.trigger-line .trigger-row { flex: 1; min-width: 0; }
+.tool-row .btn { font-size: 12px; letter-spacing: 0.06em; color: var(--ink); }
+.tool-row .btn-ghost { color: var(--accent-text); }
+
+/* — help and about — */
+.about-title { font: 600 34px/0.95 "Barlow Condensed", system-ui, sans-serif; }
+.about-sub { font: 400 12px/1 "Barlow", system-ui, sans-serif; color: var(--ink-55); margin-top: 5px; }
+.about-lede { font: 400 13.5px/1.6 "Barlow", system-ui, sans-serif; margin: 0; }
+.dev-card {
+  background: var(--panel); color: var(--ink); padding: 14px 15px;
+  border: 1px solid var(--ink-16);
+}
+.dev-card .kicker { margin-bottom: 9px; }
+.dev-links { display: flex; flex-direction: column; gap: 6px; }
+.btn.dev-link {
+  width: 100%; justify-content: flex-start; gap: 12px; padding: 9px 11px; border-radius: 0;
+  color: var(--ink); background: var(--page); border: 1px solid var(--ink-10);
+  text-align: left;
+}
+.btn.dev-link:hover { background: var(--accent-tint); border-color: var(--accent-text); }
+.btn.dev-link:active { background: var(--accent-tint); }
+.dev-icon { flex: none; color: var(--accent-text); }
+.dev-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dev-label {
+  font: 500 10px/1.2 "Barlow", system-ui, sans-serif; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-55);
+}
+.dev-value { font: 500 14px/1.2 "Barlow", system-ui, sans-serif; overflow-wrap: anywhere; }
+.dev-go { flex: none; color: var(--accent-text); opacity: 0.8; }
+.dev-link:hover .dev-go { opacity: 1; }
+.dev-thanks { margin: 0; text-align: center; font: 400 12px/1.4 "Barlow", system-ui, sans-serif; color: var(--ink-55); }
+/* Claude's own orange, the same in both themes. */
+.claude-name { color: #d97757; font-weight: 600; }
+.checklist { padding: 13px 14px; display: flex; flex-direction: column; gap: 9px; }
+.help-step { padding: 13px 14px; display: flex; gap: 13px; align-items: flex-start; }
+.help-step-title {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
+  font: 600 18px/1.1 "Barlow Condensed", system-ui, sans-serif;
+}
+.step-num {
+  width: 19px; height: 19px; flex: none; display: grid; place-items: center;
+  background: var(--accent); color: var(--on-accent);
+  font: 600 11px/1 "Barlow", system-ui, sans-serif;
+}
+/* Small drawings of what each step changes in game. */
+.help-pic {
+  flex: none; width: 58px; height: 48px; display: grid; place-items: center;
+  border: 1px solid var(--ink-16); background: var(--panel); color: var(--ink-70);
+}
+.pic-bars { display: flex; gap: 2px; padding: 5px; background: #1d1f20; }
+.pic-bars i { width: 7px; height: 9px; background: #f2f2f3; }
+.pic-bars i.is-empty { background: rgba(242, 242, 243, 0.25); }
+.pic-keys { display: flex; gap: 4px; }
+.pic-keys kbd {
+  min-width: 20px; height: 22px; padding: 0 4px; display: grid; place-items: center;
+  border: 1px solid var(--ink-55); border-bottom-width: 3px; background: var(--page);
+  font: 600 12px/1 ui-monospace, Menlo, Consolas, monospace; color: var(--ink);
+}
+.help-body { font: 400 12.5px/1.55 "Barlow", system-ui, sans-serif; margin: 0; color: var(--ink-70); }
+.help-body strong { font-weight: 700; color: var(--ink); }
+.help-list {
+  margin: 0; padding-left: 17px; display: flex; flex-direction: column; gap: 7px;
+  font: 400 12.5px/1.5 "Barlow", system-ui, sans-serif; color: var(--ink-70);
+}
+.help-list strong { font-weight: 700; color: var(--ink); }
+.help-list code, .modal-body code {
+  font: 500 11.5px/1 ui-monospace, Menlo, Consolas, monospace; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--ink-10); padding: 1px 4px;
+  user-select: text; -webkit-user-select: text;
+}
+.check-item {
+  display: flex; align-items: flex-start; gap: 9px;
+  font: 400 12.5px/1.45 "Barlow", system-ui, sans-serif;
+}
+.check-item svg { flex: none; margin-top: 2px; }
+.check-item[data-ok="false"] { color: var(--danger); }
+
+/* — first-run wizard — */
+.steps { display: flex; gap: 6px; padding: 14px 22px 0; flex: none; }
+.steps i { flex: 1; height: 3px; background: var(--ink-16); }
+.steps i[data-current="true"] { background: var(--accent); }
+.step-label {
+  padding: 9px 22px 0; flex: none;
+  font: 400 10px/1 "Barlow", system-ui, sans-serif;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-text);
+}
+.pane-wizard h2 { margin: 0; font-size: 30px; color: var(--ink); }
+.pane-wizard p {
+  font: 400 13.5px/1.6 "Barlow", system-ui, sans-serif; margin: 0; color: var(--ink-70);
+}
+.wiz-card { padding: 14px; display: flex; gap: 12px; align-items: flex-start; }
+.wiz-icon {
+  flex: none; width: 44px; height: 44px;
+  border: 1px solid var(--ink-16); display: grid; place-items: center;
+}
+.wiz-swatch { width: 26px; height: 7px; background: #f2f2f3; border: 1px solid var(--ink-16); }
+.wiz-card-title { font: 600 19px/1.1 "Barlow Condensed", system-ui, sans-serif; margin-bottom: 4px; }
+.wiz-card-body { font: 400 12.5px/1.5 "Barlow", system-ui, sans-serif; color: var(--ink-70); }
+.wiz-card-body strong { font-weight: 700; }
+.ack {
+  justify-content: flex-start; gap: 10px; padding: 12px 0;
+  border: 0; background: transparent; text-transform: none; letter-spacing: 0;
+  font: 400 13px/1 "Barlow", system-ui, sans-serif; color: var(--ink);
+}
+.checkbox {
+  width: 17px; height: 17px; flex: none; display: grid; place-items: center;
+  border: 1.5px solid var(--ink-16); background: transparent;
+}
+.checkbox svg { opacity: 0; }
+.checkbox[data-check="true"] { background: var(--accent); border-color: var(--accent); }
+.checkbox[data-check="true"] svg { opacity: 1; }
+.capture-btn {
+  width: 100%; justify-content: space-between; padding: 15px 14px;
+  text-transform: none; letter-spacing: 0; color: var(--ink);
+  font: 400 15px/1.2 "Barlow", system-ui, sans-serif;
+}
+.capture-btn[data-capture="true"] { border-color: var(--accent); background: var(--accent-tint); }
+.capture-kicker {
+  display: block; font: 400 10px/1 "Barlow", system-ui, sans-serif;
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent-text); margin-bottom: 5px;
+}
+.capture-key { font: 600 21px/1 "Barlow Condensed", system-ui, sans-serif; text-transform: uppercase; }
+.capture-action {
+  font: 400 10px/1 "Barlow", system-ui, sans-serif;
+  letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.5;
+}
+.warn {
+  background: var(--accent-ink); color: var(--on-dark); padding: 12px 14px;
+  font: 400 12.5px/1.5 "Barlow", system-ui, sans-serif;
+}
+.res-list { display: flex; flex-direction: column; }
+.res-item {
+  justify-content: space-between; border: 0; border-radius: 0;
+  border-bottom: 1px solid var(--ink-10); padding: 13px 2px;
+  text-transform: none; letter-spacing: 0; color: var(--ink);
+}
+.res-item:last-child { border-bottom: 0; }
+.res-item > span:first-child { display: flex; align-items: center; gap: 11px; }
+.res-item-name { display: block; font: 600 19px/1 "Barlow Condensed", system-ui, sans-serif; }
+.res-item-size {
+  display: block; margin-top: 3px;
+  font: 400 10.5px/1 "Barlow", system-ui, sans-serif; color: var(--ink-55);
+}
+.dot-radio {
+  width: 15px; height: 15px; display: block; border-radius: 50%;
+  border: 1.5px solid var(--ink-16); background: transparent;
+}
+.dot-radio[data-radio="true"] {
+  border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 3.5px var(--page);
+}
+.wiz-note { padding: 13px 14px; font: 400 12px/1.5 "Barlow", system-ui, sans-serif; color: var(--ink-70); }
+.wiz-note strong { font-weight: 700; }
+.wizbar {
+  flex: none; border-top: 1px solid var(--ink-16); padding: 13px 22px;
+  display: flex; gap: 10px; align-items: center; background: var(--panel);
+}
+.wizbar .btn { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink); }
+.wizbar .btn-primary { min-width: 130px; justify-content: center; color: var(--on-accent); }
+.wizbar .spacer { flex: 1; }
+
+/* — the Advanced notice — */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center;
+  background: var(--backdrop);
+}
+.modal {
+  width: min(380px, calc(100% - 40px)); padding: 18px 18px 16px;
+  display: flex; flex-direction: column; gap: 9px;
+  background: var(--page); color: var(--ink);
+  border: 1px solid var(--ink-16); border-top: 3px solid var(--accent);
+  box-shadow: var(--shadow-lg);
+}
+.modal-title { font: 600 24px/1.05 "Barlow Condensed", system-ui, sans-serif; }
+.modal-body { margin: 0; font: 400 13px/1.55 "Barlow", system-ui, sans-serif; color: var(--ink-70); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+.modal-actions .btn {
+  min-width: 96px; justify-content: center;
+  font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.modal-actions .btn-primary { color: var(--on-accent); }
+
+/* — problems — */
+.problems {
+  background: var(--accent-ink); color: var(--on-dark); padding: 11px 13px; flex: none;
+  font: 400 12.5px/1.5 "Barlow", system-ui, sans-serif;
+}
+.problems ul { margin: 0; padding-left: 17px; }
+/* diagnose_region writes a monitor layout across several lines; collapsing
+   them into one paragraph makes it unreadable. */
+.problems li { white-space: pre-line; }
+
+/* The design system paints .btn from its own tokens; keep them in step. */
+.btn { color: var(--ink); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn-primary:hover, .btn-primary:active { background: var(--accent-deep); border-color: var(--accent-deep); }
+.tag-accent { background: var(--accent-tint); color: var(--accent-text); }
+.btn-secondary { border-color: var(--ink-16); }
+.btn-secondary:hover { background: var(--ink-08); }

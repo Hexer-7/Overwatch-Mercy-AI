@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# PyInstaller output
+build/
+dist/
+
+# Created next to the program while the window is open
+webview_data/
+
+# Written next to the program when it runs from source
+config.xml
+config.xml.tmp
+self-check.txt
+cli-screens.txt
+
+# Tool caches
+.ruff_cache/
+.mypy_cache/

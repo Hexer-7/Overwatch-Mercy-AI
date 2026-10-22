@@ -1,0 +1,19 @@
+# What Mercy AI.exe is built from (item 114): the program without OpenCV.
+#
+# cv2.pyd is 71 MB of a 129 MB download and cannot be trimmed -- the wheel ships
+# one monolithic binary. mercy_ai/imageops.py implements the five operations this
+# program actually uses (colour threshold, bitwise AND, Gaussian blur, area
+# resize, PNG decode) in numpy, and mercy_ai/png.py decodes the template assets
+# with nothing but zlib from the standard library.
+#
+# Install with:  pip install -r requirements-build.txt
+# requirements.txt (with OpenCV) is the reference environment for running from
+# source and for tests/test_imageops.py.
+
+mss>=9.0.1
+numpy>=1.26
+keyboard==0.13.5
+pynput>=1.7.6
+psutil>=5.9.6
+pywin32>=306; sys_platform == "win32"
+pywebview>=5.0; sys_platform == "win32"

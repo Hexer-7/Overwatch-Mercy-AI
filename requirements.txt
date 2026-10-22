@@ -1,9 +1,20 @@
-opencv-python==4.9.0.80
-mss==9.0.1
-numpy==1.26.4
+# Item 91: headless OpenCV -- this program never calls imshow/namedWindow/VideoCapture,
+#          so the bundled Qt/GTK GUI stack is pure download weight.
+# Item 92: Pillow and pygetwindow removed; nothing imports them any more.
+# Item 95: see requirements-dev.txt for the test-only extras.
+# Item 113: pywebview renders the desktop window through the WebView2 runtime
+#           that ships with Windows, so nothing browser-shaped is bundled.
+#           The console version does not need it and starts without it.
+#
+# The upper bounds keep the project on the OpenCV 4.x line the vision code was
+# verified against. The old pins (opencv-python==4.9.0.80, numpy==1.26.4,
+# psutil==5.9.6, pywin32==306) have no wheels for Python 3.13, so the original
+# requirements.txt could not be installed on a current Python at all.
+opencv-python-headless>=4.9,<5
+mss>=9.0.1
+numpy>=1.26
 keyboard==0.13.5
-pynput==1.7.6
-Pillow==11.0.0
-pygetwindow==0.0.9
-psutil==5.9.6
-pywin32==306
+pynput>=1.7.6
+psutil>=5.9.6
+pywin32>=306; sys_platform == "win32"
+pywebview>=5.0; sys_platform == "win32"

@@ -1,0 +1,99 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Hexer-7
+
+[project]
+name = "mercy-ai"
+dynamic = ["version"]
+description = "Overwatch Mercy pocket-healing assistant"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Hexer-7" }]
+keywords = ["overwatch", "mercy", "computer-vision"]
+classifiers = [
+    "Environment :: Console",
+    "Environment :: Win32 (MS Windows)",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Topic :: Games/Entertainment",
+]
+
+# The exe is built without OpenCV (see requirements-build.txt); OpenCV is the
+# reference implementation of the image operations when running from source.
+dependencies = [
+    "opencv-python-headless>=4.9,<5",
+    "mss>=9.0.1",
+    "numpy>=1.26",
+    "keyboard==0.13.5",
+    "pynput>=1.7.6",
+    "psutil>=5.9.6",
+    "pywin32>=306; sys_platform == 'win32'",
+    "pywebview>=5.0; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "mypy>=1.11",
+]
+
+[project.scripts]
+mercy-ai = "mercy_ai.launch:main"
+
+[project.urls]
+Homepage = "https://github.com/Hexer-7/Overwatch-Mercy-AI"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["mercy_ai*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "mercy_ai.__version__" }
+
+[tool.setuptools.package-data]
+mercy_ai = ["py.typed"]
+"mercy_ai.ui" = ["web/*", "web/_ds/*", "web/_ds/fonts/*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = [".venv", "build", "dist"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "UP", "SIM", "RUF", "C4", "PTH", "RET", "ARG", "I"]
+ignore = [
+    "E501",    # line length is handled by the formatter
+    "RET504",  # a named result before return is often clearer
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests shadow names and assert on private attributes.
+"tests/*" = ["ARG001", "ARG002", "B011", "SIM117"]
+# The text interface draws with these characters on purpose.
+# Every screen builder and key handler takes the same arguments, used or not.
+"mercy_ai/cli/*" = ["RUF001", "RUF005", "ARG001", "ARG002"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_ignores = true
+warn_redundant_casts = true
+ignore_missing_imports = true      # mss / keyboard / pynput ship no stubs
+exclude = ["tests/", "\\.venv/"]
+
+# numpy >= 2.3 ships stubs written with PEP 695 `type X = ...`, which mypy only
+# parses when python_version >= 3.12. The project supports 3.10, so numpy's
+# stubs are skipped rather than raising the version checked against.
+[[tool.mypy.overrides]]
+module = ["numpy", "numpy.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
+filterwarnings = ["error::SyntaxWarning"]

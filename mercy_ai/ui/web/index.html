@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: Apache-2.0 | Copyright (c) 2024-2026 Hexer-7 -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mercy AI</title>
+<link rel="stylesheet" href="_ds/fonts/fonts.css">
+<link rel="stylesheet" href="_ds/styles.css">
+<link rel="stylesheet" href="app.css">
+<script>
+/* A blank window with nothing in it is the worst way for this to fail, and a
+   web view has no console anyone is watching. Anything thrown before or during
+   boot is written into the window itself. */
+window.__boot = function (text, fatal) {
+  var box = document.getElementById("bootError");
+  if (!box) { return; }
+  box.textContent = text;
+  box.hidden = !fatal;
+};
+window.onerror = function (message, source, line) {
+  window.__boot("Script error: " + message + " (line " + line + ")", true);
+};
+window.addEventListener("unhandledrejection", function (event) {
+  window.__boot("Bridge error: " + (event.reason && event.reason.message || event.reason), true);
+});
+</script>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── title bar ─────────────────────────────────────────────────────── -->
+  <header class="titlebar pywebview-drag-region">
+    <div class="titlebar-brand">
+      <img class="brand-icon" src="icon.png" alt="">
+      <span class="brand-name" id="brandName">Mercy AI</span>
+      <span class="brand-version" id="brandVersion"></span>
+    </div>
+    <button class="btn winbtn" id="btnMinimize" title="Minimize" tabindex="-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14"/></svg></button>
+    <button class="btn winbtn is-close" id="btnClose" title="Close" tabindex="-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </header>
+
+  <div class="problems" id="bootError" hidden></div>
+
+  <!-- ── first run ─────────────────────────────────────────────────────── -->
+  <section class="screen" id="wizard" hidden>
+    <div class="steps">
+      <i data-current="true"></i><i id="step2Bar"></i><i id="step3Bar"></i>
+    </div>
+    <div class="step-label">Step <span id="stepNumber">1</span> of 3</div>
+
+    <div class="pane pane-wizard" id="wizStep1">
+      <div class="warn" id="wizConfigError" hidden></div>
+      <h2>Two things about your game</h2>
+      <p>Mercy AI reads your ally&rsquo;s health ring off the screen. It only reads reliably if the game looks the way it expects.</p>
+      <div class="blueprint wiz-card">
+        <div class="wiz-icon"><div class="wiz-swatch"></div></div>
+        <div>
+          <div class="wiz-card-title">Set the health bar to white</div>
+          <div class="wiz-card-body">Options &rarr; Video &rarr; Colour Blind &rarr; set health, shield, armour and overhealth to <strong>white</strong>. Blue is the default and it will not match.</div>
+        </div>
+      </div>
+      <div class="blueprint wiz-card">
+        <div class="wiz-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="1.5"><rect x="2" y="4" width="20" height="14"/><path d="M8 21h8M12 18v3"/></svg></div>
+        <div>
+          <div class="wiz-card-title">Run Overwatch fullscreen</div>
+          <div class="wiz-card-body">Not borderless. Borderless lets Windows shift the picture and the capture lands in the wrong place.</div>
+        </div>
+      </div>
+      <button class="btn ack" id="btnAck">
+        <span class="checkbox" id="ackBox"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--on-accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+        Both done &mdash; I&rsquo;m good to continue
+      </button>
+    </div>
+
+    <div class="pane pane-wizard" id="wizStep2" hidden>
+      <h2>Pick two spare keys</h2>
+      <p>In Overwatch, bind heal and damage boost to keyboard keys as well as the mouse. Mercy AI presses those keys &mdash; it can&rsquo;t press your mouse buttons.</p>
+      <button class="btn capture-btn" id="btnWizHeal">
+        <span style="text-align:left">
+          <span class="capture-kicker">Heal &middot; primary weapon</span>
+          <span class="capture-key" id="wizHealLabel">Not set</span>
+        </span>
+        <span class="capture-action" id="wizHealAction">Set key</span>
+      </button>
+      <button class="btn capture-btn" id="btnWizBoost">
+        <span style="text-align:left">
+          <span class="capture-kicker">Damage boost &middot; secondary</span>
+          <span class="capture-key" id="wizBoostLabel">Not set</span>
+        </span>
+        <span class="capture-action" id="wizBoostAction">Set key</span>
+      </button>
+      <div class="warn" id="wizClash" hidden>Those are the same key. Heal and damage boost need to be different, or they&rsquo;ll fight each other in game.</div>
+      <div class="fine" id="wizKeyNote">Choose any keyboard keys you like. Not a mouse button.</div>
+    </div>
+
+    <div class="pane pane-wizard" id="wizStep3" hidden>
+      <h2>Your resolution</h2>
+      <p>This is your game computer&rsquo;s screen <strong>height</strong> in pixels, which is normally your desktop resolution.</p>
+      <div class="res-list" id="wizResList"></div>
+      <div class="warn" id="wizResWarn" hidden></div>
+      <div class="blueprint wiz-note">
+        Overwatch must run on your <strong>primary</strong> monitor &mdash; Mercy AI measures from its top-left corner.
+      </div>
+    </div>
+
+    <div class="problems" id="wizProblems" hidden></div>
+    <div class="wizbar">
+      <button class="btn btn-secondary" id="btnWizBack" disabled>Back</button>
+      <span class="spacer"></span>
+      <button class="btn btn-primary" id="btnWizNext">Next</button>
+    </div>
+  </section>
+
+  <!-- ── main window ───────────────────────────────────────────────────── -->
+  <section class="screen" id="main" hidden>
+    <nav class="tabs">
+      <button class="btn tab" data-tab="status" data-active="true">Status</button>
+      <button class="btn tab" data-tab="settings">Settings</button>
+      <button class="btn tab" data-tab="help">Help</button>
+      <button class="btn tab" data-tab="about">About</button>
+    </nav>
+
+    <!-- ── Status ── -->
+    <div class="pane pane-status" id="tabStatus">
+      <div class="blueprint plate">
+        <div class="kicker">State</div>
+        <div class="state-word" id="stateWord">RUNNING</div>
+        <div class="plate-metrics">
+          <div class="plate-metric">
+            <span class="metric-label">Beam</span>
+            <span class="metric-value mode-word" id="modeWord" data-mode="IDLE">IDLE</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bars">
+        <div class="bar-head">
+          <span class="metric-label">Ally health match</span>
+          <span class="metric-value" id="healthText">0.000</span>
+        </div>
+        <div class="bar bar-health">
+          <div class="bar-fill" id="healthFill"></div>
+          <div class="bar-tick" id="healthTick"></div>
+          <div class="bar-tick-label" id="thresholdLabel">Switch 0.000</div>
+        </div>
+      </div>
+
+      <div class="blueprint hint-card">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="6"/><path d="M12 2v8"/></svg>
+        <div class="note">Hold <strong id="hintTrigger">Mouse Left click</strong> in game and Mercy AI takes over.<br><span class="muted">Tap <strong id="hintPause">f2</strong> any time to pause everything.</span></div>
+      </div>
+
+      <div class="problems" id="statusProblems" hidden></div>
+      <button class="btn btn-primary run-btn" id="btnPause">Pause</button>
+    </div>
+
+    <!-- ── Settings ── -->
+    <div class="pane pane-settings" id="tabSettings" hidden>
+      <div class="problems" id="settingsProblems" hidden></div>
+
+      <!-- Only shown when the screen and the setting disagree. Resolution is
+           detected, so most people never need to see the picker at all. -->
+      <div class="res-alert" id="resAlert" hidden>
+        <span id="resAlertText"></span>
+        <button class="btn btn-primary" id="btnResFix" hidden></button>
+      </div>
+
+      <div class="field">
+        <div class="dial-head">
+          <label for="dial">Switch to damage boost at</label>
+          <button class="btn reset-btn" data-reset="threshold_percent">Reset</button>
+          <span id="dialText">10.0</span>
+        </div>
+        <input type="range" id="dial" min="1" max="10" step="0.1" value="10">
+        <div class="dial-scale">
+          <span>1 &mdash; boost early</span><span id="dialThreshold">match 0.990</span><span>10 &mdash; only at full</span>
+        </div>
+        <div class="field-note" data-desc="threshold_percent"></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="key-grid">
+          <div class="field">
+            <label>Heal key (in game)</label>
+            <button class="btn btn-secondary key-btn" data-bind="heal_btn"><span>&mdash;</span><small>rebind</small></button>
+          </div>
+          <div class="field">
+            <label>Damage boost key (in game)</label>
+            <button class="btn btn-secondary key-btn" data-bind="damage_boost_btn"><span>&mdash;</span><small>rebind</small></button>
+          </div>
+        </div>
+        <div class="field-note">Bind the same two keys to Mercy&rsquo;s weapons in Overwatch, alongside the mouse.</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="switch-list">
+        <div class="switch-row">
+          <div class="switch-text">
+            <div class="switch-title">Smooth healing</div>
+            <div class="switch-sub" data-desc="dynamic_heal"></div>
+          </div>
+          <button class="btn switch" data-toggle="dynamic_heal"><span class="knob"></span></button>
+        </div>
+        <div class="switch-row">
+          <div class="switch-text">
+            <div class="switch-title">Flash Heal</div>
+            <div class="switch-sub" id="flashCaption"></div>
+          </div>
+          <button class="btn switch" id="flashEnable"><span class="knob"></span></button>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-head"><label>Appearance</label></div>
+        <div class="res-row" id="themeRow"></div>
+      </div>
+
+      <button class="btn btn-secondary advanced-toggle" id="btnAdvanced">Advanced<span id="advancedGlyph">+</span></button>
+      <div class="blueprint advanced-card" id="advancedCard" hidden>
+        <div class="switch-sub">Sensible defaults. Change these only if something specific needs it. A few rarely needed settings are only in config.xml (Open folder); edits there apply the next time you change a setting here or restart Mercy AI. If an edit has a mistake, nothing is saved here until it is fixed.</div>
+
+        <div class="adv-group">
+          <div class="kicker">Controls</div>
+          <div class="key-grid">
+            <div class="field">
+              <div class="field-head"><label>Trigger (hold to run)</label><button class="btn reset-btn" data-reset="keybind_btn">Reset</button></div>
+              <button class="btn btn-secondary key-btn is-word" id="btnTrigger"><span>&mdash;</span><small>change</small></button>
+            </div>
+            <div class="field">
+              <div class="field-head"><label>Pause key</label><button class="btn reset-btn" data-reset="pause_toggle_button">Reset</button></div>
+              <button class="btn btn-secondary key-btn" data-bind="pause_toggle_button"><span>&mdash;</span><small>rebind</small></button>
+            </div>
+            <div class="field">
+              <div class="field-head"><label>Flash Heal key (in game)</label><button class="btn reset-btn" data-reset="flash_heal_btn">Reset</button></div>
+              <button class="btn btn-secondary key-btn" data-bind="flash_heal_btn"><span>&mdash;</span><small>rebind</small></button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Game resolution</label>
+            <div class="res-row" id="resRow"></div>
+            <div class="field-note" id="resNote"></div>
+          </div>
+        </div>
+
+        <div class="adv-group">
+          <div class="kicker">Detection</div>
+          <div class="switch-row is-bare">
+            <div class="switch-text">
+              <div class="switch-title">Detect Ana&rsquo;s grenade</div>
+              <div class="switch-sub" data-desc="bomb_detection"></div>
+            </div>
+            <button class="btn switch" data-toggle="bomb_detection"><span class="knob"></span></button>
+          </div>
+        </div>
+
+        <div class="adv-group">
+          <div class="kicker">Focus</div>
+          <div class="switch-row is-bare">
+            <div class="switch-text">
+              <div class="switch-title">Pause while Overwatch is unfocused</div>
+              <div class="switch-sub" data-desc="focus_gate"></div>
+            </div>
+            <button class="btn switch" data-toggle="focus_gate"><span class="knob"></span></button>
+          </div>
+          <div class="switch-row is-bare" id="clickCheckRow">
+            <div class="switch-text">
+              <div class="switch-title">Strict focus: check where you click</div>
+              <div class="switch-sub" data-desc="click_check"></div>
+            </div>
+            <button class="btn switch" data-toggle="click_check"><span class="knob"></span></button>
+          </div>
+        </div>
+
+        <div class="adv-group" id="advSmooth">
+          <div class="kicker">Smooth healing</div>
+          <div class="adv-field">
+            <div class="adv-head"><div class="adv-name">Resume healing below the switch point by</div><button class="btn reset-btn" data-reset="dynamic_heal_drop">Reset</button><input class="input" type="number" step="0.01" data-number="dynamic_heal_drop"></div>
+            <div class="adv-desc" data-desc="dynamic_heal_drop"></div>
+            <div class="adv-live" data-live="dynamic_heal_drop"></div>
+            <div class="adv-error" data-error="dynamic_heal_drop" hidden></div>
+          </div>
+        </div>
+
+        <div class="adv-group" id="advFlash">
+          <div class="kicker">Flash Heal</div>
+          <div class="switch-row is-bare">
+            <div class="switch-text">
+              <div class="switch-title">After Ana&rsquo;s grenade</div>
+              <div class="switch-sub" data-desc="flash_heal_trigger"></div>
+            </div>
+            <button class="btn switch" id="flashAna"><span class="knob"></span></button>
+          </div>
+          <div class="switch-row is-bare">
+            <div class="switch-text">
+              <div class="switch-title">Fire on your ally&rsquo;s health</div>
+              <div class="switch-sub" data-desc="flash_heal_on_health_drop"></div>
+            </div>
+            <button class="btn switch" data-toggle="flash_heal_on_health_drop"><span class="knob"></span></button>
+          </div>
+          <div class="adv-field" data-health-field>
+            <div class="trigger-row">
+              <button class="btn trigger-opt" data-health-mode="emergency"><span>Emergency</span><span>a sharp fall</span></button>
+              <button class="btn trigger-opt" data-health-mode="low"><span>Normal</span><span>below a line</span></button>
+            </div>
+            <div class="adv-desc" data-desc="flash_heal_health_mode"></div>
+          </div>
+          <div class="adv-field" data-mode-field="emergency">
+            <div class="adv-head"><div class="adv-name">Fall that counts as an emergency</div><button class="btn reset-btn" data-reset="flash_heal_drop">Reset</button><input class="input" type="number" step="0.05" data-number="flash_heal_drop"></div>
+            <div class="adv-desc" data-desc="flash_heal_drop"></div>
+            <div class="adv-live" data-live="flash_heal_drop"></div>
+            <div class="adv-error" data-error="flash_heal_drop" hidden></div>
+          </div>
+          <div class="adv-field" data-mode-field="low">
+            <div class="adv-head"><div class="adv-name">Fire when health is below</div><button class="btn reset-btn" data-reset="flash_heal_low_health">Reset</button><input class="input" type="number" step="0.05" data-number="flash_heal_low_health"></div>
+            <div class="adv-desc" data-desc="flash_heal_low_health"></div>
+            <div class="adv-live" data-live="flash_heal_low_health"></div>
+            <div class="adv-error" data-error="flash_heal_low_health" hidden></div>
+          </div>
+        </div>
+
+        <div class="tool-row">
+          <button class="btn btn-ghost" id="btnOpenFolder">Open folder</button>
+          <button class="btn btn-ghost" id="btnRedoSetup">Redo setup</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Help ── -->
+    <div class="pane pane-about" id="tabHelp" hidden>
+      <div>
+        <div class="about-title">Help</div>
+        <div class="about-sub">Three things to set in Overwatch, then hold the trigger</div>
+      </div>
+
+      <div class="blueprint help-step">
+        <div class="help-pic" aria-hidden="true">
+          <div class="pic-bars"><i></i><i></i><i></i><i></i><i class="is-empty"></i></div>
+        </div>
+        <div>
+          <div class="help-step-title"><span class="step-num">1</span>White health bars</div>
+          <div class="help-body">Options &rarr; Video &rarr; Colour Blind &rarr; set health, shield, armour and overhealth to <strong>white</strong>. Blue is the default and it will not match.</div>
+        </div>
+      </div>
+
+      <div class="blueprint help-step">
+        <div class="help-pic" aria-hidden="true">
+          <svg width="46" height="36" viewBox="0 0 46 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="42" height="26"/><rect x="5" y="5" width="36" height="20" fill="var(--accent)" stroke="none"/><path d="M15 34h16M23 28v6"/></svg>
+        </div>
+        <div>
+          <div class="help-step-title"><span class="step-num">2</span>Fullscreen, on the main monitor</div>
+          <div class="help-body">Options &rarr; Video &rarr; Display mode &rarr; <strong>Fullscreen</strong>, not borderless. Overwatch must run on your <strong>primary</strong> monitor.</div>
+        </div>
+      </div>
+
+      <div class="blueprint help-step">
+        <div class="help-pic" aria-hidden="true">
+          <div class="pic-keys"><kbd id="helpHealKey"></kbd><kbd id="helpBoostKey"></kbd></div>
+        </div>
+        <div>
+          <div class="help-step-title"><span class="step-num">3</span>Give Mercy&rsquo;s beam two keys</div>
+          <div class="help-body">Options &rarr; Controls &rarr; Mercy: add your heal key (<strong id="helpHealKey2"></strong>) as a second key for Primary Fire and your damage boost key (<strong id="helpBoostKey2"></strong>) for Secondary Fire. Keep the mouse buttons too. You choose the keys under Settings.</div>
+        </div>
+      </div>
+
+      <div class="blueprint checklist" id="healthChecks">
+        <div class="kicker">This computer</div>
+        <div id="healthCheckList"></div>
+      </div>
+
+      <div class="blueprint checklist">
+        <div class="kicker">Nothing happens in game</div>
+        <p class="help-body">Mercy AI asks for administrator rights when it starts, because Windows silently drops key presses sent to a game that runs with higher rights. If you answered <strong>No</strong>, close it and open it again. Otherwise check the three steps above, and that the resolution under Settings &rarr; Advanced matches your screen.</p>
+      </div>
+
+      <div class="blueprint checklist">
+        <div class="kicker">More in Mercy AI</div>
+        <ul class="help-list">
+          <li><strong>Text version.</strong> Everything in this window also works in a console, with the arrow keys and Enter: run <code>"Mercy AI.exe" -cli</code>.</li>
+          <li><strong>Calibration.</strong> <code>"Mercy AI.exe" -calibrate</code> shows your ally&rsquo;s health match live while you play, to help you choose the switch point under Settings.</li>
+          <li><strong>Checks.</strong> <code>-monitors</code> lists your screens, <code>-benchmark</code> times the screen reading. <code>-help</code> lists every option.</li>
+          <li><strong>How to run these.</strong> Press Open folder below, click the address bar of that folder, type <code>cmd</code> and press Enter, then type the command.</li>
+          <li><strong>Reset.</strong> A blue Reset appears beside any number or key you changed; it puts back the default.</li>
+          <li><strong>Advanced.</strong> Settings &rarr; Advanced has the trigger, pause key, Flash Heal and more. Test changes there in the Practice Range first.</li>
+        </ul>
+      </div>
+
+      <div class="tool-row">
+        <button class="btn btn-secondary" id="btnHelpFolder">Open folder</button>
+      </div>
+    </div>
+
+    <!-- ── About ── -->
+    <div class="pane pane-about" id="tabAbout" hidden>
+      <div>
+        <div class="about-title">Mercy AI</div>
+        <div class="about-sub">Version <span id="aboutVersion"></span> &middot; free and open source</div>
+      </div>
+      <p class="about-lede">A pocket-healing buddy for Mercy. It watches your ally&rsquo;s health ring, holds heal while they&rsquo;re hurt, and slips into damage boost the moment they top off &mdash; so you can watch the fight instead of your beam.</p>
+
+      <!-- Each row opens its page in your browser. The program asks for the
+           link by name (open_link), so the page cannot open anything else. -->
+      <div class="dev-card">
+        <div class="kicker">Developer</div>
+        <div class="dev-links">
+          <button class="btn dev-link" data-link="instagram" title="instagram.com/_1_B"><svg class="dev-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="0.9" fill="currentColor" stroke="none"/></svg><span class="dev-text"><span class="dev-label">Instagram</span><span class="dev-value">_1_B</span></span><svg class="dev-go" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></button>
+          <button class="btn dev-link" data-link="github" title="github.com/Hexer-7"><svg class="dev-icon" width="22" height="22" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg><span class="dev-text"><span class="dev-label">GitHub</span><span class="dev-value">Hexer-7</span></span><svg class="dev-go" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></button>
+          <button class="btn dev-link" data-link="repo" title="github.com/Hexer-7/Overwatch-Mercy-AI"><svg class="dev-icon" width="22" height="22" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2.5A2.5 2.5 0 0 1 4.5 0h8.75a.75.75 0 0 1 .75.75v12.5a.75.75 0 0 1-.75.75h-2.5a.75.75 0 0 1 0-1.5h1.75v-2h-8a1 1 0 0 0-.714 1.7.75.75 0 1 1-1.072 1.05A2.495 2.495 0 0 1 2 11.5Zm10.5-1h-8a1 1 0 0 0-1 1v6.708A2.486 2.486 0 0 1 4.5 9h8ZM5 12.25a.25.25 0 0 1 .25-.25h3.5a.25.25 0 0 1 .25.25v3.25a.25.25 0 0 1-.4.2l-1.45-1.087a.249.249 0 0 0-.3 0L5.4 15.7a.25.25 0 0 1-.4-.2Z"/></svg><span class="dev-text"><span class="dev-label">Repository</span><span class="dev-value">Overwatch-Mercy-AI</span></span><svg class="dev-go" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg></button>
+        </div>
+      </div>
+      <div class="problems" id="aboutProblems" hidden></div>
+      <p class="dev-thanks">Thx to <span class="claude-name">Claude</span>.</p>
+      <p class="dev-thanks">&copy; 2024-2026 Hexer-7 &middot; Apache License 2.0</p>
+    </div>
+
+    <!-- ── the bar that never scrolls away ── -->
+    <footer class="statusbar" id="statusBar">
+      <div class="statusbar-item" id="sbRes"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14"/><path d="M8 21h8"/></svg><span>&mdash;</span></div>
+      <div class="statusbar-item" id="sbFps"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"/></svg><span>&mdash;</span></div>
+    </footer>
+  </section>
+</div>
+
+<!-- ── the Advanced notice ── -->
+<div class="modal-backdrop" id="advNotice" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="advNoticeTitle">
+    <div class="kicker">Advanced settings</div>
+    <div class="modal-title" id="advNoticeTitle">Test it in the Practice Range</div>
+    <p class="modal-body">If you want to edit advanced settings, it&rsquo;s recommended to test them in the Practice Range first.</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="btnAdvCancel">Cancel</button>
+      <button class="btn btn-primary" id="btnAdvOk">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

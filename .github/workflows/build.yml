@@ -1,0 +1,77 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Hexer-7
+name: Build Mercy AI
+
+# Builds the single-file "Mercy AI.exe" on Windows and attaches it to the
+# run as a downloadable artifact. Runs on every push to main, on pull requests,
+# and on demand from the Actions tab ("Run workflow").
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # 3.13 is what the previous release was built with.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-build.txt
+
+      - name: Install dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements-build.txt pyinstaller pytest ruff
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Run tests
+        run: python -m pytest tests -q
+
+      - name: Build the exe
+        run: python -m PyInstaller mercy_ai.spec --noconfirm --distpath dist --workpath build
+
+      - name: Check the build is exactly one file
+        run: |
+          $files = @(Get-ChildItem dist)
+          $files | Format-Table Name, @{ Name = "MB"; Expression = { [math]::Round($_.Length / 1MB, 1) } }
+          if ($files.Count -ne 1 -or $files[0].Name -ne "Mercy AI.exe") {
+            throw "Expected exactly one file, 'Mercy AI.exe', in dist."
+          }
+
+      # Runs the built exe itself: every module it needs imports, the page is
+      # there, the templates for all four resolutions load from inside it, and
+      # the text interface draws every screen (printed below the report).
+      # A copy is used so the self-check report does not land in dist.
+      - name: Self-check the built exe
+        run: |
+          New-Item -ItemType Directory -Force check | Out-Null
+          Copy-Item "dist\Mercy AI.exe" check\
+          $p = Start-Process -FilePath "check\Mercy AI.exe" -ArgumentList "--self-check" -PassThru
+          $null = $p.Handle  # without this, ExitCode can read back empty
+          if (-not $p.WaitForExit(180000)) { $p.Kill(); throw "Self-check timed out." }
+          if (Test-Path check\self-check.txt) { Get-Content check\self-check.txt } else { "No self-check report was written." }
+          if (Test-Path check\cli-screens.txt) { Get-Content check\cli-screens.txt }
+          if ($p.ExitCode -ne 0) { throw "Self-check failed (exit code $($p.ExitCode))." }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Mercy-AI
+          path: dist/Mercy AI.exe
+          if-no-files-found: error

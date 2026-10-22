@@ -1,0 +1,11 @@
+# Every text file is stored and checked out with LF line endings, on every
+# platform, so diffs never show a whole file changing because of an editor.
+* text=auto eol=lf
+
+# cmd.exe needs CRLF in batch files.
+*.bat text eol=crlf
+
+*.ico binary
+*.png binary
+*.woff2 binary
+*.exe binary
