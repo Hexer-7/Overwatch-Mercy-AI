@@ -40,7 +40,7 @@ __all__ = [
 ]
 
 #: Bumped whenever a key is added.  Purely informational; migration is by key.
-CONFIG_VERSION = 4
+CONFIG_VERSION = 5
 
 THRESHOLD_MIN, THRESHOLD_MAX = 1.0, 10.0
 NCC_MIN, NCC_MAX = 0.2, 0.99
@@ -80,6 +80,10 @@ class Config:
     flash_heal_settle: float = 0.4
     flash_heal_max_fall_rate: float = 60.0
     flash_heal_blank_floor: float = 0.02
+    #: Press Flash Heal only while the staff is out: elsewhere its key reloads
+    #: the blaster or is another hero's ability.
+    flash_heal_staff_check: bool = True
+    flash_heal_weapon_threshold: float = 0.6
 
     # -- Appearance and smooth healing ------------------------------------ #
     theme: str = "light"
@@ -306,6 +310,13 @@ def read_config(path: Path) -> Config:
             "flash_heal_max_fall_rate", DEFAULTS["flash_heal_max_fall_rate"]
         ),
         flash_heal_blank_floor=number("flash_heal_blank_floor", DEFAULTS["flash_heal_blank_floor"]),
+        flash_heal_staff_check=_text(
+            root, "flash_heal_staff_check", DEFAULTS["flash_heal_staff_check"]
+        )
+        != "0",
+        flash_heal_weapon_threshold=number(
+            "flash_heal_weapon_threshold", DEFAULTS["flash_heal_weapon_threshold"]
+        ),
         theme=_theme(_text(root, "theme", DEFAULTS["theme"])),
         dynamic_heal=_text(root, "dynamic_heal", DEFAULTS["dynamic_heal"]) == "1",
         dynamic_heal_drop=number("dynamic_heal_drop", DEFAULTS["dynamic_heal_drop"]),
@@ -353,6 +364,8 @@ def config_to_xml(config: Config) -> ET.Element:
         "flash_heal_settle": _format_number(config.flash_heal_settle),
         "flash_heal_max_fall_rate": _format_number(config.flash_heal_max_fall_rate),
         "flash_heal_blank_floor": _format_number(config.flash_heal_blank_floor),
+        "flash_heal_staff_check": "1" if config.flash_heal_staff_check else "0",
+        "flash_heal_weapon_threshold": _format_number(config.flash_heal_weapon_threshold),
         "theme": config.theme,
         "dynamic_heal": "1" if config.dynamic_heal else "0",
         "dynamic_heal_drop": _format_number(config.dynamic_heal_drop),

@@ -15,8 +15,13 @@ never on the damage-boost release, so a boost-to-heal transition with heal
 already held may switch straight back on the next frame.  A full health bar
 decides the boost on its own, without consulting the Ana-bomb score.
 
+Flash Heal is pressed only while the staff is out: with the blaster its key
+reloads the gun, and on another hero it is that hero's key.  ``weapon`` (a
+:class:`~mercy_ai.weapon.StaffWatch`) is asked every frame while Flash Heal is
+on, and again right before a press.
+
 Every external dependency is injected: ``clock=``, ``sleep=``, ``score=``,
-``capture``, ``controller`` and ``focus_gate``.  With fakes for these the loop
+``capture``, ``controller``, ``focus_gate`` and ``weapon``.  With fakes for these the loop
 runs deterministically with no screen, keyboard or game, and each
 :meth:`ControlLoop.step` returns a :class:`StepOutcome` describing exactly what
 it did.
@@ -93,6 +98,10 @@ class StepOutcome:
     released: tuple[Any, ...] = field(default_factory=tuple)
     flash_fired: bool = False
     flash_reason: str | None = None
+    #: The staff was not seen, so Flash Heal stood down this frame.
+    no_staff: bool = False
+    #: A press was asked for but held back because the staff was not out.
+    flash_held: bool = False
 
 
 class ControlLoop:
@@ -110,6 +119,7 @@ class ControlLoop:
         boost_key: Any,
         flash_key: Any = None,
         focus_gate: Any | None = None,
+        weapon: Any | None = None,
         clock: Callable[[], float] | None = None,
         sleep: Callable[[float], None] | None = None,
         status: Callable[..., None] | None = None,
@@ -124,6 +134,7 @@ class ControlLoop:
         self.boost_key = boost_key
         self.flash_key = flash_key
         self.focus_gate = focus_gate
+        self.weapon = weapon
         # perf_counter is monotonic and sub-microsecond.  time.time is the wall
         # clock: an NTP correction can move it backwards, making the elapsed time
         # negative and freezing the action cooldown until the clock catches up.
@@ -161,6 +172,8 @@ class ControlLoop:
         # Reset unconditionally: the planner may hold state (an armed timer, a
         # pending release) even on a frame where no key was down.
         self.flash.reset()
+        if self.weapon is not None:
+            self.weapon.reset()
         return released
 
     # -- one iteration ----------------------------------------------------- #
@@ -225,12 +238,15 @@ class ControlLoop:
         # planner requests the switch MODE_SWITCH_LEAD ahead of the press so the
         # action cooldown has time to apply it.
         flash_now = self._clock()
+        watch = self.weapon if self.flash.enabled else None
+        no_staff = watch is not None and not watch.staff_out(flash_now)
         flash = self.flash.update(
             now=flash_now,
             bomb_present=bomb >= self.config.bomb_threshold,
             healing=self.heal,
             boosting=self.damage_boost,
             health=health,
+            staff=not no_staff,
         )
         if flash.force_heal_mode:
             boost_wanted = False
@@ -263,7 +279,15 @@ class ControlLoop:
         # The flash key is pressed after the beam decision, so heal mode is
         # already applied this frame. It never touches ``_last_action``: Flash
         # Heal is a separate ability and must not delay a weapon switch.
-        if flash.press and self.flash_key is not None:
+        #
+        # One last look at the weapon first: the routine check above can be up
+        # to READ_INTERVAL old, and a press without the staff is a reload or
+        # another hero's ability.
+        flash_held = False
+        if flash.press and watch is not None and not watch.confirm(self._clock()):
+            self.flash.veto()
+            flash_held = no_staff = True
+        elif flash.press and self.flash_key is not None:
             self.controller.press(self.flash_key)
             pressed.append(self.flash_key)
         elif flash.release and self.flash_key is not None:
@@ -304,8 +328,10 @@ class ControlLoop:
             boosting=self.damage_boost,
             healing=self.heal,
             slept=slept,
-            flash_fired=flash.press,
-            flash_reason=flash.reason,
+            flash_fired=flash.press and not flash_held,
+            flash_reason=None if flash_held else flash.reason,
+            no_staff=no_staff,
+            flash_held=flash_held,
             pressed=tuple(pressed),
             released=tuple(released_keys),
         )

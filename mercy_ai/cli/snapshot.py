@@ -96,7 +96,7 @@ def sample_screens() -> list[tuple[str, UIState, Data]]:
         ),
         (
             "advanced, Flash Heal",
-            UIState(tab=1, advanced=True, focus={"advanced": "flash_heal_low_health"}),
+            UIState(tab=1, advanced=True, focus={"advanced": "flash_heal_staff_check"}),
             everything,
         ),
         ("help", UIState(tab=2), main),

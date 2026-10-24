@@ -68,10 +68,12 @@ SHIPPED = {
     "flash_heal_settle": "0.4",
     "flash_heal_max_fall_rate": "60",
     "flash_heal_blank_floor": "0.02",
+    "flash_heal_staff_check": "1",
+    "flash_heal_weapon_threshold": "0.6",
     "theme": "light",
     "dynamic_heal": "0",
     "dynamic_heal_drop": "0.15",
-    "config_version": "4",
+    "config_version": "5",
 }
 
 

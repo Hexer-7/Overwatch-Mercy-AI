@@ -47,6 +47,10 @@ their damage. Let go and it stops. Press **F2** at any time to pause it.
   damage boost, since healing does nothing.
 - **Flash Heal** (off until you turn it on). Casts Flash Heal when Ana's grenade
   wears off, or when your ally's health drops low.
+- **Staff only.** Flash Heal's key reloads the blaster, and on another hero it
+  is that hero's key, so Mercy AI presses it only while the staff is in your
+  hand. It reads the weapon icon beside the ammo counter. Turn it off under
+  Settings > Advanced > Flash Heal.
 - **Smooth healing** (off until you turn it on). Stays on damage boost through
   small hits instead of flicking back to heal.
 - **Advanced settings.** Change the trigger, pause key and Flash Heal behaviour
@@ -63,6 +67,8 @@ their damage. Let go and it stops. Press **F2** at any time to pause it.
 - Check the resolution under Settings > Advanced matches your screen.
 - If an overlay sits over the game, turn off *Strict focus* under Settings >
   Advanced > Focus.
+- If Flash Heal never fires, run `"Mercy AI.exe" -calibrate`: with the staff out
+  the last column must say `weapon=staff  R allowed`. Keep the game's HUD scale at 100%.
 
 ## Fine tuning in config.xml
 
@@ -85,6 +91,7 @@ change a setting in Mercy AI or restart it.
 | `flash_heal_settle` | 0.4 | 0 to 5 | Seconds ignored after you press the trigger, while the beam connects. |
 | `flash_heal_max_fall_rate` | 60 | 0 to 500 | Falls faster than this are ignored as a covered screen. 0 turns it off. |
 | `flash_heal_blank_floor` | 0.02 | 0 to 0.5 | Health readings at or below this are ignored. 0 turns it off. |
+| `flash_heal_weapon_threshold` | 0.6 | 0 to 1 | How sure the match must be before the staff counts as in your hand. |
 
 </details>
 

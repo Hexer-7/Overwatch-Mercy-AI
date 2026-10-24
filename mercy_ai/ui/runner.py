@@ -423,6 +423,7 @@ def _build_real_loop(
     )
     from ..loop import ControlLoop
     from ..state import State
+    from ..weapon import StaffWatch
 
     # Before the grabber exists: CAPTUREBLT is read inside every blit.
     apply_capture_settings(config)
@@ -500,6 +501,19 @@ def _build_real_loop(
         )
 
         grabber = ScreenGrabber()
+        # The staff check exists only for Flash Heal: with Flash Heal off, or
+        # the check turned off, the weapon region is never even captured.
+        weapon = None
+        icons = getattr(assets, "weapon", None)
+        if config.flash_heal_enabled and config.flash_heal_staff_check and icons is not None:
+            weapon_region = icons.region.as_mss()
+            # A grab overwrites the buffer the health and grenade frames point
+            # into; the loop asks for the weapon only after scoring both.
+            weapon = StaffWatch(
+                icons,
+                lambda: grabber.grab(weapon_region),
+                threshold=config.flash_heal_weapon_threshold,
+            )
         loop = (loop_factory or ControlLoop)(
             assets=assets,
             config=config,
@@ -510,6 +524,7 @@ def _build_real_loop(
             boost_key=boost_key,
             flash_key=flash_key,
             focus_gate=FocusGate() if config.focus_gate else None,
+            weapon=weapon,
             status=hub.record,
         )
     except BaseException:

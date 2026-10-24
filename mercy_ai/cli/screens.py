@@ -77,6 +77,7 @@ CLI_FIELDS = frozenset(
         "flash_heal_health_mode",
         "flash_heal_low_health",
         "flash_heal_drop",
+        "flash_heal_staff_check",
         "dynamic_heal",
         "dynamic_heal_drop",
     }
@@ -628,6 +629,7 @@ def _advanced_rows(state: UIState, data: Data, style: Style, width: int) -> list
                         live="flash_heal_drop",
                     )
                 )
+        rows.append(_toggle_row(state, data, "flash_heal_staff_check", "Only with the staff out"))
     else:
         rows.append(
             _text(

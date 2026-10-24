@@ -2,8 +2,9 @@
 # Copyright (c) 2024-2026 Hexer-7
 """Capture-region geometry loaded from ``data/<res>/info.xml``.
 
-:func:`load_geometry` returns the health and Ana-bomb regions as one immutable
-:class:`Geometry`, which callers pass explicitly to whatever needs it.
+:func:`load_geometry` returns the health and Ana-bomb regions, and the weapon
+icon region when the file has one, as one immutable :class:`Geometry`, which
+callers pass explicitly to whatever needs it.
 
 The XML tag is ``<high>``; the Python attribute is ``height``.  Existing
 ``info.xml`` files keep working, and every reader of the code sees the word it
@@ -49,10 +50,13 @@ class Region:
 
 @dataclass(frozen=True)
 class Geometry:
-    """The two regions Mercy AI watches."""
+    """The regions Mercy AI watches."""
 
     health: Region
     bomb: Region
+    #: The weapon icon beside the ammo counter, for the staff check.  Optional:
+    #: an ``info.xml`` without ``<weapon_res>`` still loads, without the check.
+    weapon: Region | None = None
 
 
 def union_region(a: Region, b: Region) -> Region:
@@ -85,7 +89,7 @@ def _region_from(node: ET.Element, tag: str, source: Path) -> Region:
 
 
 def load_geometry(xml_path: Path) -> Geometry:
-    """Parse ``info.xml`` into two regions.
+    """Parse ``info.xml`` into its regions.
 
     Elements are tested with ``is None`` rather than truthiness:
     ``Element.__bool__`` means "has children", not "exists", and Python 3.12+
@@ -103,7 +107,11 @@ def load_geometry(xml_path: Path) -> Geometry:
     if res_element is None or bomb_res_element is None:
         raise GeometryError(f"<res> and/or <bomb_res> missing in {xml_path}.")
 
+    weapon_element = root.find("weapon_res")
     return Geometry(
         health=_region_from(res_element, "res", xml_path),
         bomb=_region_from(bomb_res_element, "bomb_res", xml_path),
+        weapon=(
+            None if weapon_element is None else _region_from(weapon_element, "weapon_res", xml_path)
+        ),
     )

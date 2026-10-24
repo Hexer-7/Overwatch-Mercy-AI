@@ -21,6 +21,7 @@ from .assets import Assets
 from .capture import CombinedCapture, ScreenGrabber, captureblt_enabled, use_fast_capture
 from .config import Config, wants_boost
 from .vision import GAUSS_KSIZE, prepare_binary, score_region, white_mask
+from .weapon import WeaponReading, read_weapon
 
 log = logging.getLogger(__name__)
 
@@ -34,7 +35,11 @@ __all__ = [
 
 
 def render_calibration_line(
-    health: float, bomb: float, config: Config, boosting: bool = False
+    health: float,
+    bomb: float,
+    config: Config,
+    boosting: bool = False,
+    weapon: WeaponReading | None = None,
 ) -> str:
     """One line of the calibration readout.
 
@@ -50,10 +55,15 @@ def render_calibration_line(
     action = "BOOST" if boost else "HEAL "
     filled = max(0, min(40, round(health * 40)))
     bar = "#" * filled
-    return (
+    line = (
         f"health={health:6.3f}  bomb={bomb:6.3f}  {action}  "
         f"|{bar:<40}|  threshold={config.threshold:.3f}"
     )
+    if weapon is not None:
+        seen = weapon.describe(config.flash_heal_weapon_threshold)
+        flash = "R allowed" if seen == "staff" else "R held"
+        line += f"  weapon={seen:<7} {flash}"
+    return line
 
 
 def calibrate(
@@ -82,7 +92,13 @@ def calibrate(
             health_frame, bomb_frame = capture.frames()
             health = score_region(health_frame, assets.health, assets.health_buffers)
             bomb = score_region(bomb_frame, assets.bomb, assets.bomb_buffers)
-            update(render_calibration_line(health, bomb, config))
+            # Grabbed last: the grab reuses the buffer both frames above point into.
+            weapon = (
+                None
+                if assets.weapon is None
+                else read_weapon(grabber.grab(assets.weapon.region.as_mss()), assets.weapon)
+            )
+            update(render_calibration_line(health, bomb, config, weapon=weapon))
             sleep(0.05)
     except KeyboardInterrupt:
         pass

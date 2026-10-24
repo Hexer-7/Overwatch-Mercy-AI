@@ -12,4 +12,10 @@
         <x>1905</x>
         <y>1441</y>
     </bomb_res>
+    <weapon_res>
+        <high>93</high>
+        <width>171</width>
+        <x>3306</x>
+        <y>1878</y>
+    </weapon_res>
 </data>

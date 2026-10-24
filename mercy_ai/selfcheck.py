@@ -5,7 +5,9 @@
 CI runs this on the exe it has just built. Every module the program imports at
 run time must import, the window's page must be there, the templates for every
 resolution must load from wherever a one-file build unpacks them, and the text
-interface must draw each of its screens. The report goes to ``self-check.txt``
+interface must draw each of its screens. The weapon icons are optional at run
+time, so they get a check of their own: a build without them would quietly
+lose the staff check. The report goes to ``self-check.txt``
 next to the exe, because a windowed build has nowhere to print.
 """
 
@@ -67,7 +69,8 @@ def self_check(report: Path | None = None) -> int:
     def templates(resolution: str) -> None:
         from .assets import load_assets
 
-        load_assets(resolution)
+        if load_assets(resolution).weapon is None:
+            raise FileNotFoundError(f"weapon icons for {resolution}")
 
     for resolution in RESOLUTIONS:
         record(f"templates {resolution}", partial(templates, resolution))

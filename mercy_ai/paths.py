@@ -23,6 +23,7 @@ __all__ = [
     "DATA_DIR",
     "RESOLUTIONS",
     "RESOLUTION_SIZES",
+    "WEAPON_ASSET_KEYS",
     "WEBVIEW_DATA_DIR",
     "asset_paths",
 ]
@@ -50,6 +51,13 @@ ASSET_KEYS: dict[str, str] = {
     "bomb": "ana_bomb.png",
     "bomb_filter": "ana_bomb_filter.png",
     "info": "info.xml",
+}
+
+#: The weapon icons for the staff check. Kept apart from :data:`ASSET_KEYS`
+#: because they are optional: without them only that check is lost.
+WEAPON_ASSET_KEYS: dict[str, str] = {
+    "blaster": "blaster.png",
+    "staff": "staff.png",
 }
 
 

@@ -69,6 +69,7 @@ FIELD_TYPES: dict[str, type] = {
     "flash_heal_health_mode": str,
     "flash_heal_low_health": float,
     "flash_heal_drop": float,
+    "flash_heal_staff_check": bool,
     "dynamic_heal": bool,
     "dynamic_heal_drop": float,
     "theme": str,
@@ -147,6 +148,9 @@ CAPTIONS: dict[str, str] = {
     "flash_heal_low_health": "Flash Heal fires when your ally's health match is below this, "
     "on the same 0 to 1 scale as the health bar on Status: 0.4 is a little under half. "
     "Higher fires sooner, lower only when they are nearly dead. Type 0.10 to 0.80. Default 0.4.",
+    "flash_heal_staff_check": "Casts Flash Heal only while you hold the staff. With the "
+    "blaster its key reloads, and on another hero it is that hero's key. Turn off only if "
+    "Flash Heal never fires with the staff out.",
     "flash_heal_drop": "How much your ally's health match must fall within 0.3 seconds to "
     "count as an emergency, on the same 0 to 1 scale as the health bar on Status: 0.5 is "
     "half of it. Lower fires on smaller hits, higher only on big ones. "

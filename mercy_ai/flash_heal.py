@@ -18,6 +18,13 @@ if the ally is then below :data:`EXPIRY_MAX_HEALTH`.
 emergency check and blind to how fast the fall was; fires once per dip and is
 armed again when the ally climbs back above the line.
 
+**Only with the staff out.**  Flash Heal's key does something else the rest of
+the time: with the Caduceus Blaster in hand it reloads the gun, and on another
+hero it is that hero's key.  The loop reports whether the staff is seen
+(:mod:`mercy_ai.weapon`) and, while it is not, nothing fires and nothing is
+remembered: the readings taken meanwhile describe no beam, so they are
+dropped, and the beam settles again once the staff is back.
+
 Why this is a state machine with no I/O
 ---------------------------------------
 Timing bugs are invisible in a live match and expensive to get wrong, so every
@@ -159,6 +166,8 @@ class FlashHealPlanner:
         self._watching_since: float | None = None  # when the trigger went down
         self._below = 0  # consecutive healing frames under the low-health line
         self._low_fired = False  # fired for this dip; cleared above the line
+        self._no_staff = False  # standing down because the staff is not seen
+        self._fire_before: float | None = None  # _last_fire before the latest press
 
     # -- introspection ----------------------------------------------------- #
 
@@ -188,6 +197,8 @@ class FlashHealPlanner:
         """One short phrase for the loop's status callback."""
         if not self.enabled:
             return "off"
+        if self._no_staff:
+            return "held (no staff)"
         now = self._clock() if now is None else now
         if self.state is FlashState.COOLDOWN and self._last_fire is not None:
             waiting = max(self.cooldown, REFIRE_GAP) - (now - self._last_fire)
@@ -208,8 +219,12 @@ class FlashHealPlanner:
         healing: bool,
         boosting: bool,
         health: float = 0.0,
+        staff: bool = True,
     ) -> FlashAction:
-        """Advance one frame and say what to do."""
+        """Advance one frame and say what to do.
+
+        *staff* is False while the staff is not seen: nothing fires then.
+        """
         if not self.enabled:
             return FlashAction()
 
@@ -226,6 +241,11 @@ class FlashHealPlanner:
                 self._pressed_at = None
                 return FlashAction(release=True)
             return FlashAction()
+
+        if not staff:
+            self._stand_down()
+            return FlashAction()
+        self._no_staff = False
 
         if self.state is FlashState.COOLDOWN:
             if self._last_fire is not None and now - self._last_fire >= self.cooldown:
@@ -265,6 +285,20 @@ class FlashHealPlanner:
 
         return FlashAction()
 
+    def veto(self) -> None:
+        """Take back the press :meth:`update` just asked for; it never happened.
+
+        For the loop's last look at the weapon right before pressing: if the
+        staff turned out to be gone after all, the key is not pressed, so there
+        is nothing to release and no cooldown to wait out.
+        """
+        if self.state is FlashState.HOLDING:
+            self.state = FlashState.IDLE
+            self._pressed_at = None
+            self._last_fire = self._fire_before
+            log.info("flash: press held back, the staff is not out")
+        self._stand_down()
+
     def disable(self) -> None:
         """Never fire again, for a loop that has no Flash Heal key to press."""
         self.trigger = "off"
@@ -292,6 +326,11 @@ class FlashHealPlanner:
             self.state = FlashState.COOLDOWN
 
     # -- internals ---------------------------------------------------------- #
+
+    def _stand_down(self) -> None:
+        """Forget what was seen; the staff is not out, so it described no beam."""
+        self._no_staff = True
+        self.reset()
 
     def _debounce(self, bomb_present: bool) -> tuple[bool, bool]:
         """Return ``(rising, falling)`` edges of the *confirmed* grenade state."""
@@ -416,6 +455,7 @@ class FlashHealPlanner:
     def _fire(self, now: float, reason: str) -> FlashAction:
         self.state = FlashState.HOLDING
         self._pressed_at = now
+        self._fire_before = self._last_fire
         self._last_fire = now
         self._fired_this_bomb = True
         # How long the grenade was on screen before the press, for the log.

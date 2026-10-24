@@ -16,12 +16,13 @@ from pathlib import Path
 
 from .errors import AssetError
 from .geometry import Geometry, load_geometry
-from .paths import DATA_DIR, asset_paths
+from .paths import DATA_DIR, WEAPON_ASSET_KEYS, asset_paths
 from .vision import MatchBuffers, Template, build_template, load_filter
+from .weapon import WeaponIcons, build_icon_template
 
 log = logging.getLogger(__name__)
 
-__all__ = ["Assets", "load_assets", "validate_assets"]
+__all__ = ["Assets", "load_assets", "load_weapon_icons", "validate_assets"]
 
 
 @dataclass(frozen=True)
@@ -34,6 +35,9 @@ class Assets:
     bomb: Template
     health_buffers: MatchBuffers
     bomb_buffers: MatchBuffers
+    #: ``None`` when this resolution has no weapon icons; the staff check is
+    #: then skipped and Flash Heal works as it did before it existed.
+    weapon: WeaponIcons | None = None
 
 
 def validate_assets(resolution: str, data_dir: Path | None = None) -> dict[str, Path]:
@@ -85,9 +89,31 @@ def load_assets(resolution: str, data_dir: Path | None = None) -> Assets:
 
     return Assets(
         resolution=resolution,
+        weapon=load_weapon_icons(resolution, geometry, data_dir),
         geometry=geometry,
         health=templates["health"],
         bomb=templates["bomb"],
         health_buffers=MatchBuffers.for_template(templates["health"]),
         bomb_buffers=MatchBuffers.for_template(templates["bomb"]),
+    )
+
+
+def load_weapon_icons(
+    resolution: str, geometry: Geometry, data_dir: Path | None = None
+) -> WeaponIcons | None:
+    """Load the blaster and staff icons, or ``None`` if this resolution has none."""
+    region = geometry.weapon
+    base = (data_dir or DATA_DIR) / resolution
+    paths = {key: base / filename for key, filename in WEAPON_ASSET_KEYS.items()}
+    if region is None or not all(path.is_file() for path in paths.values()):
+        log.warning("No weapon icons for %s; Flash Heal will not check for the staff.", resolution)
+        return None
+    return WeaponIcons(
+        region=region,
+        blaster=build_icon_template(
+            paths["blaster"], width=region.width, height=region.height, name="blaster"
+        ),
+        staff=build_icon_template(
+            paths["staff"], width=region.width, height=region.height, name="staff"
+        ),
     )

@@ -60,6 +60,8 @@ DEFAULTS: dict[str, str] = {
     "flash_heal_settle": "0.4",
     "flash_heal_max_fall_rate": "60",
     "flash_heal_blank_floor": "0.02",
+    "flash_heal_staff_check": "1",
+    "flash_heal_weapon_threshold": "0.6",
     "theme": "light",
     "dynamic_heal": "0",
     "dynamic_heal_drop": "0.15",
@@ -189,6 +191,18 @@ COMMENTS: dict[str, str] = {
         "is covered, not that the ally is nearly dead: a hurt ally still draws one. "
         "0 turns this check off."
     ),
+    "flash_heal_staff_check": (
+        "Press Flash Heal only while Mercy holds her staff. With the blaster the same key "
+        "reloads the gun, and on another hero it is that hero's key. Read from the weapon "
+        "icon beside the ammo counter. 1 = on (default), 0 = off. Only used while Flash "
+        "Heal is on."
+    ),
+    "flash_heal_weapon_threshold": (
+        "How closely the weapon icon must match the staff before Flash Heal may fire, "
+        "0.0 - 1.0. Default 0.6. Measured on real frames at every resolution, sun glare "
+        "and white backgrounds included: the staff scores 0.84 to 1.0, the blaster never "
+        "above 0.54. Lower it if Flash Heal is held back with the staff out."
+    ),
     "flash_heal_drop": (
         "How far the health score must fall to count as an emergency, 0.1 to 0.85. "
         "Default 0.5. Values near 1.0 can never fire. Only used when "
@@ -227,6 +241,8 @@ FIELD_ORDER = (
     "flash_heal_settle",
     "flash_heal_max_fall_rate",
     "flash_heal_blank_floor",
+    "flash_heal_staff_check",
+    "flash_heal_weapon_threshold",
     "theme",
     "dynamic_heal",
     "dynamic_heal_drop",
@@ -254,5 +270,6 @@ LIMITS: dict[str, tuple[str, float, float]] = {
     "flash_heal_settle": ("flash_heal_settle", 0.0, 5.0),
     "flash_heal_max_fall_rate": ("flash_heal_max_fall_rate", 0.0, 500.0),
     "flash_heal_blank_floor": ("flash_heal_blank_floor", 0.0, 0.5),
+    "flash_heal_weapon_threshold": ("flash_heal_weapon_threshold", 0.0, 1.0),
     "dynamic_heal_drop": ("dynamic_heal_drop", 0.0, 1.0),
 }
