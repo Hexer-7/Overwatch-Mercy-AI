@@ -4,13 +4,15 @@ name: Build Mercy AI
 
 # Builds the single-file "Mercy AI.exe" on Windows and attaches it to the
 # run as a downloadable artifact. Runs on every push to main, on pull requests,
-# and on demand from the Actions tab ("Run workflow").
+# and on demand from the Actions tab ("Run workflow"). release.yml calls it
+# too, and publishes the exe it builds.
 
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read

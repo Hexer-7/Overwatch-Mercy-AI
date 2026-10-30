@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright (c) 2024-2026 Hexer-7
+name: Release Mercy AI
+
+# Builds the exe with build.yml (lint, tests, build, self-check) and publishes
+# it as a GitHub release named "Mercy AI <version>", with the exe attached as
+# "Mercy.AI.<version>.exe". Run it from the Actions tab ("Run workflow") on
+# main; the version must match __version__ in mercy_ai/__init__.py.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 1.5.2 (also the tag)"
+        required: true
+      notes:
+        description: "Release notes (Markdown)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Version matches the source
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          source=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' mercy_ai/__init__.py)
+          if [ "$source" != "$VERSION" ]; then
+            echo "::error::mercy_ai/__init__.py says $source, not $VERSION."
+            exit 1
+          fi
+
+  build:
+    needs: check
+    uses: ./.github/workflows/build.yml
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Mercy-AI
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          mv "Mercy AI.exe" "Mercy.AI.$VERSION.exe"
+          printf '%s\n' "$NOTES" > notes.md
+          gh release create "$VERSION" "Mercy.AI.$VERSION.exe" \
+            --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Mercy AI $VERSION" --notes-file notes.md
