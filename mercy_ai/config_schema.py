@@ -116,7 +116,10 @@ COMMENTS: dict[str, str] = {
         "is plenty; at 60 the worst extra reaction delay is about 17 ms against a "
         "200 ms gate. Lower this first if Mercy AI costs you in-game frames."
     ),
-    "enable_ana_bomb_detection": "Detect Ana's biotic grenade and force damage boost. 1 = on.",
+    "enable_ana_bomb_detection": (
+        "Switch to damage boost while Ana's biotic grenade is on your ally. 1 = on. "
+        "Flash Heal waits the grenade out either way."
+    ),
     "fast_capture": (
         "Drop the CAPTUREBLT flag from the screen grab. 1 = on (default). "
         "CAPTUREBLT makes Windows flatten the whole desktop on every capture and can "

@@ -223,7 +223,7 @@ class ControlLoop:
         )
         # The bomb score is computed only when it can change the outcome: when
         # health has not already asked for boost and bomb detection is on, or
-        # when Flash Heal needs to see the grenade every frame.
+        # whenever Flash Heal is on: it waits the grenade out either way.
         decides_boost = self.config.bomb_detection and not boost_wanted
         if decides_boost or self.flash.needs_bomb:
             bomb = self._score(bomb_frame, self.assets.bomb, self.assets.bomb_buffers)

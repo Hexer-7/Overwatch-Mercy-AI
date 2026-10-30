@@ -18,6 +18,10 @@ if the ally is then below :data:`EXPIRY_MAX_HEALTH`.
 emergency check and blind to how fast the fall was; fires once per dip and is
 armed again when the ally climbs back above the line.
 
+Neither health trigger fires while the grenade is seen: they wait it out, and
+the beam stays on the damage boost it switched to.  This holds with the switch
+to damage boost turned off too: the grenade is still watched for Flash Heal.
+
 **Only with the staff out.**  Flash Heal's key does something else the rest of
 the time: with the Caduceus Blaster in hand it reloads the gun, and on another
 hero it is that hero's key.  The loop reports whether the staff is seen
@@ -190,8 +194,11 @@ class FlashHealPlanner:
         already decided to boost.  That is fine for the boost decision
         -- ``or`` short-circuits -- but it would hide a grenade thrown at an ally
         who happens to be at full health, and the planner would never arm.
+
+        The health triggers need it too, to wait out the grenade, and they
+        need it whether or not the grenade switches the beam to damage boost.
         """
-        return self.enabled and self.trigger == "expiry"
+        return self.enabled
 
     def describe(self, now: float | None = None) -> str:
         """One short phrase for the loop's status callback."""
@@ -263,6 +270,13 @@ class FlashHealPlanner:
             and self._may_fire(now, healing, boosting)
         ):
             return self._fire(now, "grenade expired")
+
+        # The health triggers wait out the grenade: healing is nullified, so a
+        # burst now heals nothing and wastes the cooldown. Asking for heal mode
+        # would also drop the boost the grenade switched to. A first unconfirmed
+        # frame counts too -- erring late is safe.
+        if self._bomb_confirmed or self._seen > 0:
+            return FlashAction()
 
         if self.on_health_drop and self.health_mode == "low":
             if self._low_and_settled(now):

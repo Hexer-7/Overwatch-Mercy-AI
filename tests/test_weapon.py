@@ -282,9 +282,16 @@ class _Weapon:
         pass
 
 
-def _run(weapon, *, flash: bool = True, seconds: float = 2.0):
+def _run(
+    weapon,
+    *,
+    flash: bool = True,
+    seconds: float = 2.0,
+    grenade_at: float | None = None,
+    boost_on_grenade: bool = True,
+):
     clock = [0.0]
-    config = Config(resolution="1440", **KEYS)
+    config = Config(resolution="1440", **KEYS, bomb_detection=boost_on_grenade)
     if flash:
         config = replace(config, flash_heal_on_health_drop=True, flash_heal_health_mode="low")
     controller = _Controller()
@@ -301,13 +308,21 @@ def _run(weapon, *, flash: bool = True, seconds: float = 2.0):
         clock=lambda: clock[0],
         sleep=lambda _s: None,
         # A badly hurt ally and no grenade: the low-health trigger will want to fire.
-        score=lambda _frame, template, _buffers: 0.1 if template == "health" else 0.0,
+        # With grenade_at, a healthy ally until the grenade lands with the damage.
+        score=lambda _frame, template, _buffers: _score(template, clock[0], grenade_at),
     )
     outcomes = []
     for _ in range(round(seconds * 60)):
         outcomes.append(loop.step())
         clock[0] += 1 / 60
     return controller, outcomes
+
+
+def _score(template: str, now: float, grenade_at: float | None) -> float:
+    grenade = grenade_at is not None and now >= grenade_at
+    if template == "health":
+        return 0.1 if grenade_at is None or grenade else 0.6
+    return 0.9 if grenade else 0.0
 
 
 def test_the_loop_presses_flash_heal_with_the_staff_out():
@@ -332,6 +347,23 @@ def test_the_last_look_catches_a_swap_the_routine_check_missed():
 def test_with_no_watch_flash_heal_works_as_before():
     controller, _ = _run(None)
     assert "r" in controller.presses
+
+
+def test_the_loop_waits_out_the_grenade_and_keeps_the_boost():
+    # The grenade switched the beam to damage boost; the low-health trigger
+    # must not take it back to heal and press Flash Heal into the anti-heal.
+    controller, outcomes = _run(None, grenade_at=1.0, seconds=3.0)
+    assert controller.presses[0] == "p"  # healing before the grenade
+    assert "r" not in controller.presses
+    # Once the action cooldown lets the boost on, it stays on.
+    first = next(index for index, o in enumerate(outcomes) if o.boosting)
+    assert all(o.boosting for o in outcomes[first:])
+
+
+def test_with_the_boost_switch_off_flash_heal_still_waits_out_the_grenade():
+    controller, outcomes = _run(None, grenade_at=1.0, seconds=3.0, boost_on_grenade=False)
+    assert controller.presses == ["p"]  # heal only: no boost, no Flash Heal
+    assert all(o.bomb_scored for o in outcomes)
 
 
 def test_with_flash_heal_off_the_weapon_is_never_looked_at():

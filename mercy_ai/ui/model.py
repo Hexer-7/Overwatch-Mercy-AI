@@ -133,14 +133,15 @@ CAPTIONS: dict[str, str] = {
     "before Mercy AI goes back to healing, on the same 0 to 1 scale as the health bar on "
     "Status. Smaller heals sooner, larger stays on damage boost longer. "
     "Type 0.05 to 0.50. Default 0.15.",
-    "bomb_detection": "Switches to damage boost while your ally has Ana's anti-heal on them.",
+    "bomb_detection": "Switches to damage boost while your ally has Ana's anti-heal on them. "
+    "Off or on, Flash Heal waits for the anti-heal to wear off.",
     "focus_gate": "Stops pressing keys while you are tabbed out of Overwatch.",
     "click_check": "Turn off only if holding the trigger in game does nothing while an "
     "overlay sits over the game.",
     "flash_heal_trigger": "When Ana's anti-heal grenade on your ally wears off, casts Flash "
     "Heal if they are below half health. Above that the beam tops them up on its own.",
     "flash_heal_on_health_drop": "Casts Flash Heal when your ally's health falls fast or "
-    "drops below a line you set, Ana or not.",
+    "drops below a line you set, once Ana's anti-heal is off them.",
     "flash_heal_health_mode": "Emergency fires when your ally's health falls fast. Normal "
     "fires whenever it is below a line you set, however it got there: once per dip, then again "
     "after they climb back above it. Both wait a moment after you start healing, so the beam "

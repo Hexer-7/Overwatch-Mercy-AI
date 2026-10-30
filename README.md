@@ -44,9 +44,11 @@ their damage. Let go and it stops. Press **F2** at any time to pause it.
   before damage boost starts. 10 waits for full health; lower numbers boost
   earlier.
 - **Ana's grenade.** While your ally has anti-heal on them, Mercy AI switches to
-  damage boost, since healing does nothing.
+  damage boost, since healing does nothing. Turn it off with "Damage boost
+  during Ana's grenade" under Settings > Advanced.
 - **Flash Heal** (off until you turn it on). Casts Flash Heal when Ana's grenade
-  wears off, or when your ally's health drops low.
+  wears off, or when your ally's health drops low. It never casts while the
+  grenade is on your ally, since the burst would heal nothing.
 - **Staff only.** Flash Heal's key reloads the blaster, and on another hero it
   is that hero's key, so Mercy AI presses it only while the staff is in your
   hand. It reads the weapon icon beside the ammo counter. Turn it off under

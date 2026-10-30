@@ -187,13 +187,13 @@ def _low_planner(**fields) -> FlashHealPlanner:
     return FlashHealPlanner(config)
 
 
-def _feed(planner, frames, start=0.0, step=1 / 60):
+def _feed(planner, frames, start=0.0, step=1 / 60, bomb=False):
     """Frames of ``(healing, health)``; returns the reason for each press."""
     fired = []
     for index, (healing, health) in enumerate(frames):
         action = planner.update(
             now=start + index * step,
-            bomb_present=False,
+            bomb_present=bomb,
             healing=healing,
             boosting=False,
             health=health,
@@ -229,6 +229,55 @@ def test_low_health_is_blind_to_the_emergency_fall_rule():
     assert _feed(_low_planner(), slide) == ["low health"]
     emergency = _low_planner(flash_heal_health_mode="emergency")
     assert _feed(emergency, slide) == []
+
+
+def _actions(planner, frames, start=0.0, step=1 / 60):
+    """Frames of ``(bomb_present, health)`` while healing; returns every action."""
+    return [
+        planner.update(
+            now=start + index * step,
+            bomb_present=bomb,
+            healing=True,
+            boosting=False,
+            health=health,
+        )
+        for index, (bomb, health) in enumerate(frames)
+    ]
+
+
+#: Healthy long enough for the ring to settle, then a fall of 0.6 over 0.2 s.
+_FALL = [0.9] * 60 + [0.9 - 0.05 * i for i in range(1, 13)] + [0.3] * 30
+
+
+@pytest.mark.parametrize("mode", ["low", "emergency"])
+def test_the_health_triggers_wait_out_the_grenade(mode):
+    planner = _low_planner(flash_heal_health_mode=mode)
+    under = _actions(planner, [(True, health) for health in _FALL])
+    # Not even a request for heal mode: that would drop the grenade's boost.
+    assert not any(action.press or action.force_heal_mode for action in under)
+
+
+def test_low_health_fires_once_the_grenade_wears_off():
+    planner = _low_planner()
+    assert _feed(planner, [(True, 0.1)] * 120, bomb=True) == []
+    assert _feed(planner, [(True, 0.1)] * 3, start=2.0) == ["low health"]
+
+
+def test_a_health_drop_after_the_grenade_wears_off_fires():
+    planner = _low_planner(flash_heal_health_mode="emergency")
+    frames = [(True, health) for health in _FALL] + [(False, 0.9)] * 60
+    frames += [(False, health) for health in _FALL[60:]]
+    actions = _actions(planner, frames)
+    assert [action.reason for action in actions if action.press] == ["health drop"]
+    assert actions.index(next(a for a in actions if a.press)) > len(_FALL)
+
+
+def test_the_first_unconfirmed_grenade_frame_already_holds_the_fire():
+    planner = _low_planner(flash_heal_health_mode="emergency")
+    assert not any(a.press for a in _actions(planner, [(False, h) for h in _FALL[:69]]))
+    # The fall completes on the very frame the icon first shows up.
+    (action,) = _actions(planner, [(True, 0.3)], start=69 / 60)
+    assert not action.press and not action.force_heal_mode
 
 
 def test_an_old_timer_trigger_is_read_as_the_grenade_trigger(tmp_path):

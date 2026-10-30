@@ -548,7 +548,7 @@ def _advanced_rows(state: UIState, data: Data, style: Style, width: int) -> list
     )
 
     rows.append(_heading("DETECTION", style))
-    rows.append(_toggle_row(state, data, "bomb_detection", "Detect Ana's grenade"))
+    rows.append(_toggle_row(state, data, "bomb_detection", "Damage boost during Ana's grenade"))
 
     rows.append(_heading("FOCUS", style))
     rows.append(_toggle_row(state, data, "focus_gate", "Pause while Overwatch is unfocused"))
