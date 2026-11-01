@@ -238,6 +238,10 @@ window.addEventListener("unhandledrejection", function (event) {
               <div class="field-head"><label>Flash Heal key (in game)</label><button class="btn reset-btn" data-reset="flash_heal_btn">Reset</button></div>
               <button class="btn btn-secondary key-btn" data-bind="flash_heal_btn"><span>&mdash;</span><small>rebind</small></button>
             </div>
+            <div class="field">
+              <div class="field-head"><label>Scoreboard key (in game)</label><button class="btn reset-btn" data-reset="scoreboard_btn">Reset</button></div>
+              <button class="btn btn-secondary key-btn" data-bind="scoreboard_btn"><span>&mdash;</span><small>rebind</small></button>
+            </div>
           </div>
           <div class="field">
             <label>Game resolution</label>
@@ -327,6 +331,13 @@ window.addEventListener("unhandledrejection", function (event) {
             </div>
             <button class="btn switch" data-toggle="flash_heal_staff_check"><span class="knob"></span></button>
           </div>
+          <div class="switch-row is-bare">
+            <div class="switch-text">
+              <div class="switch-title">Wait while the scoreboard is open</div>
+              <div class="switch-sub" data-desc="flash_heal_scoreboard_hold"></div>
+            </div>
+            <button class="btn switch" data-toggle="flash_heal_scoreboard_hold"><span class="knob"></span></button>
+          </div>
         </div>
 
         <div class="tool-row">
@@ -404,7 +415,7 @@ window.addEventListener("unhandledrejection", function (event) {
     <div class="pane pane-about" id="tabAbout" hidden>
       <div>
         <div class="about-title">Mercy AI</div>
-        <div class="about-sub">Version <span id="aboutVersion"></span> &middot; free and open source</div>
+        <div class="about-sub">Version <span id="aboutVersion"></span></div>
       </div>
       <p class="about-lede">A pocket-healing buddy for Mercy. It watches your ally&rsquo;s health ring, holds heal while they&rsquo;re hurt, and slips into damage boost the moment they top off &mdash; so you can watch the fight instead of your beam.</p>
 
@@ -420,7 +431,6 @@ window.addEventListener("unhandledrejection", function (event) {
       </div>
       <div class="problems" id="aboutProblems" hidden></div>
       <p class="dev-thanks">Thx to <span class="claude-name">Claude</span>.</p>
-      <p class="dev-thanks">&copy; 2024-2026 Hexer-7 &middot; Apache License 2.0</p>
     </div>
 
     <!-- ── the bar that never scrolls away ── -->

@@ -1,5 +1,5 @@
 /* Industry — design-system tokens and component classes. This file is the source of truth for the system's look; retune it here. */
-/* No webfont @import here: Barlow is served from _ds/fonts/, linked ahead of
+/* No webfont @import here: the fonts are served from _ds/fonts/, linked ahead of
    this file so the two load in parallel and nothing waits on the network. */
 
 :root {
@@ -42,9 +42,9 @@
   --color-accent-2-800: #314457;
   --color-accent-2-900: #1f2d3a;
 
-  --font-heading: "Barlow Condensed", system-ui, sans-serif;
+  --font-heading: "Big Noodle Titling", "Arial Narrow", sans-serif;
   --font-heading-weight: 600;
-  --font-body: "Barlow", system-ui, sans-serif;
+  --font-body: "Jost", system-ui, sans-serif;
 
   --space-1: 3.4px;
   --space-2: 6.8px;
@@ -69,7 +69,7 @@ body {
   color: var(--color-text);
   font-family: var(--font-body);
 }
-h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: var(--font-heading-weight); }
+h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-style: italic; }
 
 .blueprint {
   position: relative;
@@ -90,7 +90,7 @@ h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: var(--font-headi
 *, *::before, *::after { box-sizing: border-box; }
 body { margin: 0; font-size: 15px; line-height: 1.55; font-weight: 400; }
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-style: italic;
   line-height: 1.12; letter-spacing: -0.015em; margin: 0 0 var(--space-2);
 }
 h1 { font-size: 42px; }
@@ -123,7 +123,7 @@ figcaption {
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   cursor: pointer; text-decoration: none;
-  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-style: italic;
   font-size: 14px; line-height: 1.2; color: var(--color-text); /* matches the .input's 14px —
      the pair sits side by side in sign-up rows */
   background: transparent; border: 1px solid transparent;
@@ -192,7 +192,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 }
 .card-kicker { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent); }
 .card-title {
-  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-style: italic;
   font-size: 17px; line-height: 1.2;
 }
 .card-body { margin: 0; font-size: 13px; opacity: 0.8; flex: 1; }
@@ -222,7 +222,7 @@ textarea.input { min-height: 90px; resize: vertical; }
   border-bottom: none;
 }
 .nav-brand {
-  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-style: italic;
   font-size: 18px; margin-right: auto;
 }
 .nav a { color: inherit; text-decoration: none; font-size: 14px; }
@@ -253,7 +253,7 @@ textarea.input { min-height: 90px; resize: vertical; }
   background: var(--color-surface); box-shadow: var(--shadow-lg);
 }
 .dialog-title {
-  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight); font-style: italic;
   font-size: 20px;
 }
 .dialog-body { font-size: 14px; opacity: 0.85; }

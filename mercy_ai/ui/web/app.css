@@ -22,8 +22,11 @@
   --ink-16: rgba(29, 31, 32, 0.16);
   --ink-10: rgba(29, 31, 32, 0.1);
   --ink-08: rgba(29, 31, 32, 0.08);
-  --ink-55: rgba(29, 31, 32, 0.55);
-  --ink-70: rgba(29, 31, 32, 0.7);
+  /* Secondary text. Darker than the names say: at 0.55 and 0.7 the small
+     captions read at 3.7:1 and 5.9:1 on the page; these give 6.3:1 and 9.4:1
+     while still sitting clearly below --ink. */
+  --ink-55: rgba(29, 31, 32, 0.72);
+  --ink-70: rgba(29, 31, 32, 0.84);
   --accent: #8a1c3c;
   --accent-deep: #66132b;
   /* Accent as text, and what sits on an accent fill. */
@@ -81,7 +84,7 @@ body {
   overflow: hidden;
   background: var(--page);
   color: var(--ink);
-  font-family: "Barlow", system-ui, sans-serif;
+  font-family: var(--font-body);
   /* A native window is not a document: text selection and the rubber-band
      overscroll both make it feel like a web page embedded by mistake. */
   user-select: none;
@@ -109,10 +112,10 @@ body {
 }
 .brand-icon { width: 16px; height: 16px; flex: none; display: block; }
 .brand-name {
-  font: 600 13px/1 "Barlow Condensed", system-ui, sans-serif;
+  font: italic 600 13px/1 var(--font-heading);
   letter-spacing: 0.11em; text-transform: uppercase; white-space: nowrap;
 }
-.brand-version { font: 400 10px/1 "Barlow", system-ui, sans-serif; color: var(--ink-55); }
+.brand-version { font: 400 10px/1 var(--font-body); color: var(--ink-55); }
 .winbtn {
   width: 44px; height: 36px; padding: 0; flex: none;
   border: 0; border-left: 1px solid var(--ink-10); border-radius: 0;
@@ -153,27 +156,27 @@ body {
 
 /* — shared type — */
 .kicker {
-  font: 400 10px/1 "Barlow", system-ui, sans-serif;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-text);
+  font: 600 11.5px/1 var(--font-body);
+  letter-spacing: 0; text-transform: uppercase; color: var(--accent-text);
 }
 .metric-label {
-  font: 400 10px/1 "Barlow", system-ui, sans-serif;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-55);
+  font: 600 11.5px/1 var(--font-body);
+  letter-spacing: 0; text-transform: uppercase; color: var(--ink-55);
 }
 .metric-value {
-  font: 600 15px/1 "Barlow Condensed", system-ui, sans-serif;
+  font: italic 600 15px/1 var(--font-heading);
   font-variant-numeric: tabular-nums;
 }
 .divider { height: 1px; background: var(--ink-16); flex: none; }
-.note { font: 400 12.5px/1.45 "Barlow", system-ui, sans-serif; }
-.fine { font: 400 11.5px/1.5 "Barlow", system-ui, sans-serif; color: var(--ink-55); }
+.note { font: 400 12.5px/1.45 var(--font-body); }
+.fine { font: 400 12.5px/1.5 var(--font-body); color: var(--ink-55); }
 .muted { color: var(--ink-55); }
 .mono { font-family: ui-monospace, Menlo, Consolas, monospace; }
 
 /* — status — */
 .plate { padding: 16px; display: flex; flex-direction: column; gap: 7px; }
 .state-word {
-  font: 600 44px/0.9 "Barlow Condensed", system-ui, sans-serif; letter-spacing: -0.01em;
+  font: italic 600 44px/0.9 var(--font-heading); letter-spacing: -0.01em;
 }
 .state-word[data-state="PAUSED"] { color: var(--ink-55); }
 .state-word[data-state="STOPPED"] { color: var(--danger); }
@@ -195,8 +198,8 @@ body {
 .bar-tick { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--ink); }
 .bar-tick-label {
   position: absolute; bottom: -14px; white-space: nowrap;
-  font: 400 9px/1 "Barlow", system-ui, sans-serif;
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-55);
+  font: 600 10px/1 var(--font-body);
+  letter-spacing: 0; text-transform: uppercase; color: var(--ink-55);
 }
 
 .hint-card { padding: 13px 14px; display: flex; align-items: center; gap: 12px; }
@@ -215,7 +218,7 @@ body {
 }
 .statusbar-item {
   display: flex; align-items: center; gap: 6px;
-  font: 400 10.5px/1 "Barlow", system-ui, sans-serif;
+  font: 400 10.5px/1 var(--font-body);
   letter-spacing: 0.06em; color: var(--ink-55);
 }
 .statusbar-item svg { flex: none; }
@@ -223,14 +226,14 @@ body {
 
 /* — settings — */
 .dial-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
-.dial-head label { font: 400 12px/1 "Barlow", system-ui, sans-serif; color: var(--ink-70); }
+.dial-head label { font: 400 12px/1 var(--font-body); color: var(--ink-70); }
 .dial-head span {
-  font: 600 16px/1 "Barlow Condensed", system-ui, sans-serif; font-variant-numeric: tabular-nums;
+  font: italic 600 16px/1 var(--font-heading); font-variant-numeric: tabular-nums;
 }
 input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 .dial-scale {
   display: flex; justify-content: space-between;
-  font: 400 10px/1 "Barlow", system-ui, sans-serif; color: var(--ink-55);
+  font: 400 10px/1 var(--font-body); color: var(--ink-55);
 }
 
 .field > label { color: var(--ink-70); }
@@ -241,9 +244,11 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
   font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px;
   text-transform: none; letter-spacing: 0; color: var(--ink);
 }
-.key-btn.is-word { font-family: "Barlow", system-ui, sans-serif; }
+/* Key names and the trigger's words are read, not titles: upright. */
+.key-btn { font-style: normal; }
+.key-btn.is-word { font-family: var(--font-body); }
 .key-btn small {
-  font: 400 10px/1 "Barlow", system-ui, sans-serif;
+  font: 400 10px/1 var(--font-body);
   letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.5;
 }
 .key-btn[data-capture="true"] { border-color: var(--accent); background: var(--accent-tint); }
@@ -256,7 +261,7 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 .res-opt + .res-opt { border-left: 1px solid var(--ink-16); }
 .res-opt[data-active="true"] { background: var(--accent); color: var(--on-accent); }
 .field-note {
-  font: 400 10.5px/1.4 "Barlow", system-ui, sans-serif; color: var(--ink-55); margin-top: 5px;
+  font: 400 12px/1.45 var(--font-body); color: var(--ink-55); margin-top: 5px;
 }
 .field-note[data-warn="true"] { color: var(--danger); font-weight: 500; }
 
@@ -267,8 +272,8 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 }
 .switch-row:last-child, .switch-row.is-bare { border-bottom: 0; }
 .switch-text { flex: 1; min-width: 0; }
-.switch-title { font: 400 13px/1.3 "Barlow", system-ui, sans-serif; }
-.switch-sub { font: 400 10.5px/1.4 "Barlow", system-ui, sans-serif; color: var(--ink-55); }
+.switch-title { font: 400 13px/1.3 var(--font-body); }
+.switch-sub { font: 400 12px/1.45 var(--font-body); color: var(--ink-55); }
 .switch {
   flex: none; width: 42px; height: 22px; padding: 0; position: relative;
   border: 1px solid var(--ink-16); border-radius: 0; background: var(--panel);
@@ -289,7 +294,7 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 }
 .trigger-opt + .trigger-opt { border-left: 1px solid var(--ink-16); }
 .trigger-opt span:first-child { font-size: 13px; letter-spacing: 0.05em; text-transform: uppercase; }
-.trigger-opt span:last-child { font: 400 9.5px/1 "Barlow", system-ui, sans-serif; opacity: 0.6; }
+.trigger-opt span:last-child { font: 400 9.5px/1 var(--font-body); opacity: 0.6; }
 .trigger-opt[data-active="true"] { background: var(--accent); color: var(--on-accent); }
 
 .advanced-toggle {
@@ -305,7 +310,7 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 .res-alert {
   display: flex; align-items: center; gap: 12px; flex: none;
   background: var(--accent-ink); color: var(--on-dark); padding: 11px 13px;
-  font: 400 12.5px/1.45 "Barlow", system-ui, sans-serif;
+  font: 400 12.5px/1.45 var(--font-body);
 }
 .res-alert span { flex: 1; min-width: 0; }
 .res-alert .btn { flex: none; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -315,12 +320,12 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 }
 .adv-field:last-of-type { border-bottom: 0; }
 .adv-head { display: flex; align-items: center; gap: 10px; }
-.adv-name { flex: 1; min-width: 0; font: 400 12.5px/1.3 "Barlow", system-ui, sans-serif; }
+.adv-name { flex: 1; min-width: 0; font: 400 12.5px/1.3 var(--font-body); }
 .adv-field .input { width: 96px; flex: none; min-height: 30px; font-size: 12.5px; }
-.adv-desc { font: 400 10.5px/1.45 "Barlow", system-ui, sans-serif; color: var(--ink-55); }
+.adv-desc { font: 400 12px/1.45 var(--font-body); color: var(--ink-55); }
 /* The setting worked out against the player's own numbers. */
-.adv-live { font: 500 11px/1.45 "Barlow", system-ui, sans-serif; color: var(--accent-text); }
-.adv-error { font: 500 11px/1.45 "Barlow", system-ui, sans-serif; color: var(--danger); }
+.adv-live { font: 500 12px/1.45 var(--font-body); color: var(--accent-text); }
+.adv-error { font: 500 12px/1.45 var(--font-body); color: var(--danger); }
 .tool-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* Reset: only ever beside a setting that differs from its default. Two
@@ -328,7 +333,7 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 .btn.reset-btn {
   flex: none; padding: 3px 8px; border: 0; border-radius: 0;
   background: var(--accent); color: var(--on-accent);
-  font: 600 9.5px/1.2 "Barlow", system-ui, sans-serif;
+  font: 600 9.5px/1.2 var(--font-body);
   letter-spacing: 0.1em; text-transform: uppercase;
 }
 .btn.reset-btn:hover { background: var(--accent-deep); }
@@ -348,9 +353,9 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 .tool-row .btn-ghost { color: var(--accent-text); }
 
 /* — help and about — */
-.about-title { font: 600 34px/0.95 "Barlow Condensed", system-ui, sans-serif; }
-.about-sub { font: 400 12px/1 "Barlow", system-ui, sans-serif; color: var(--ink-55); margin-top: 5px; }
-.about-lede { font: 400 13.5px/1.6 "Barlow", system-ui, sans-serif; margin: 0; }
+.about-title { font: italic 600 34px/0.95 var(--font-heading); }
+.about-sub { font: 400 12px/1 var(--font-body); color: var(--ink-55); margin-top: 5px; }
+.about-lede { font: 400 13.5px/1.6 var(--font-body); margin: 0; }
 .dev-card {
   background: var(--panel); color: var(--ink); padding: 14px 15px;
   border: 1px solid var(--ink-16);
@@ -367,45 +372,48 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 .dev-icon { flex: none; color: var(--accent-text); }
 .dev-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .dev-label {
-  font: 500 10px/1.2 "Barlow", system-ui, sans-serif; letter-spacing: 0.1em;
+  font: 600 11px/1.2 var(--font-body); letter-spacing: 0;
   text-transform: uppercase; color: var(--ink-55);
 }
-.dev-value { font: 500 14px/1.2 "Barlow", system-ui, sans-serif; overflow-wrap: anywhere; }
+.dev-value { font: 500 14px/1.2 var(--font-body); overflow-wrap: anywhere; }
 .dev-go { flex: none; color: var(--accent-text); opacity: 0.8; }
 .dev-link:hover .dev-go { opacity: 1; }
-.dev-thanks { margin: 0; text-align: center; font: 400 12px/1.4 "Barlow", system-ui, sans-serif; color: var(--ink-55); }
+.dev-thanks { margin: 0; text-align: center; font: 400 12px/1.4 var(--font-body); color: var(--ink-55); }
 /* Claude's own orange, the same in both themes. */
 .claude-name { color: #d97757; font-weight: 600; }
 .checklist { padding: 13px 14px; display: flex; flex-direction: column; gap: 9px; }
 .help-step { padding: 13px 14px; display: flex; gap: 13px; align-items: flex-start; }
 .help-step-title {
   display: flex; align-items: center; gap: 8px; margin-bottom: 4px;
-  font: 600 18px/1.1 "Barlow Condensed", system-ui, sans-serif;
+  font: italic 600 18px/1.1 var(--font-heading);
 }
 .step-num {
   width: 19px; height: 19px; flex: none; display: grid; place-items: center;
   background: var(--accent); color: var(--on-accent);
-  font: 600 11px/1 "Barlow", system-ui, sans-serif;
+  font: 600 11px/1 var(--font-body);
 }
 /* Small drawings of what each step changes in game. */
 .help-pic {
-  flex: none; width: 58px; height: 48px; display: grid; place-items: center;
+  flex: none; min-width: 58px; height: 48px; display: grid; place-items: center;
   border: 1px solid var(--ink-16); background: var(--panel); color: var(--ink-70);
 }
 .pic-bars { display: flex; gap: 2px; padding: 5px; background: #1d1f20; }
 .pic-bars i { width: 7px; height: 9px; background: #f2f2f3; }
 .pic-bars i.is-empty { background: rgba(242, 242, 243, 0.25); }
-.pic-keys { display: flex; gap: 4px; }
+/* Grows the box past its 58 px when the keycaps need it, never the other drawings. */
+.pic-keys { display: flex; gap: 4px; margin: 0 6px; }
 .pic-keys kbd {
   min-width: 20px; height: 22px; padding: 0 4px; display: grid; place-items: center;
   border: 1px solid var(--ink-55); border-bottom-width: 3px; background: var(--page);
   font: 600 12px/1 ui-monospace, Menlo, Consolas, monospace; color: var(--ink);
+  white-space: nowrap;
 }
-.help-body { font: 400 12.5px/1.55 "Barlow", system-ui, sans-serif; margin: 0; color: var(--ink-70); }
+.pic-keys kbd[data-long="true"] { font-size: 10px; }
+.help-body { font: 400 12.5px/1.55 var(--font-body); margin: 0; color: var(--ink-70); }
 .help-body strong { font-weight: 700; color: var(--ink); }
 .help-list {
   margin: 0; padding-left: 17px; display: flex; flex-direction: column; gap: 7px;
-  font: 400 12.5px/1.5 "Barlow", system-ui, sans-serif; color: var(--ink-70);
+  font: 400 12.5px/1.5 var(--font-body); color: var(--ink-70);
 }
 .help-list strong { font-weight: 700; color: var(--ink); }
 .help-list code, .modal-body code {
@@ -415,7 +423,7 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 }
 .check-item {
   display: flex; align-items: flex-start; gap: 9px;
-  font: 400 12.5px/1.45 "Barlow", system-ui, sans-serif;
+  font: 400 12.5px/1.45 var(--font-body);
 }
 .check-item svg { flex: none; margin-top: 2px; }
 .check-item[data-ok="false"] { color: var(--danger); }
@@ -426,12 +434,12 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 .steps i[data-current="true"] { background: var(--accent); }
 .step-label {
   padding: 9px 22px 0; flex: none;
-  font: 400 10px/1 "Barlow", system-ui, sans-serif;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent-text);
+  font: 600 11.5px/1 var(--font-body);
+  letter-spacing: 0; text-transform: uppercase; color: var(--accent-text);
 }
 .pane-wizard h2 { margin: 0; font-size: 30px; color: var(--ink); }
 .pane-wizard p {
-  font: 400 13.5px/1.6 "Barlow", system-ui, sans-serif; margin: 0; color: var(--ink-70);
+  font: 400 13.5px/1.6 var(--font-body); margin: 0; color: var(--ink-70);
 }
 .wiz-card { padding: 14px; display: flex; gap: 12px; align-items: flex-start; }
 .wiz-icon {
@@ -439,13 +447,13 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
   border: 1px solid var(--ink-16); display: grid; place-items: center;
 }
 .wiz-swatch { width: 26px; height: 7px; background: #f2f2f3; border: 1px solid var(--ink-16); }
-.wiz-card-title { font: 600 19px/1.1 "Barlow Condensed", system-ui, sans-serif; margin-bottom: 4px; }
-.wiz-card-body { font: 400 12.5px/1.5 "Barlow", system-ui, sans-serif; color: var(--ink-70); }
+.wiz-card-title { font: italic 600 19px/1.1 var(--font-heading); margin-bottom: 4px; }
+.wiz-card-body { font: 400 12.5px/1.5 var(--font-body); color: var(--ink-70); }
 .wiz-card-body strong { font-weight: 700; }
 .ack {
   justify-content: flex-start; gap: 10px; padding: 12px 0;
   border: 0; background: transparent; text-transform: none; letter-spacing: 0;
-  font: 400 13px/1 "Barlow", system-ui, sans-serif; color: var(--ink);
+  font: 400 13px/1 var(--font-body); color: var(--ink);
 }
 .checkbox {
   width: 17px; height: 17px; flex: none; display: grid; place-items: center;
@@ -457,21 +465,21 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 .capture-btn {
   width: 100%; justify-content: space-between; padding: 15px 14px;
   text-transform: none; letter-spacing: 0; color: var(--ink);
-  font: 400 15px/1.2 "Barlow", system-ui, sans-serif;
+  font: 400 15px/1.2 var(--font-body);
 }
 .capture-btn[data-capture="true"] { border-color: var(--accent); background: var(--accent-tint); }
 .capture-kicker {
-  display: block; font: 400 10px/1 "Barlow", system-ui, sans-serif;
-  letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent-text); margin-bottom: 5px;
+  display: block; font: 600 11.5px/1 var(--font-body);
+  letter-spacing: 0; text-transform: uppercase; color: var(--accent-text); margin-bottom: 5px;
 }
-.capture-key { font: 600 21px/1 "Barlow Condensed", system-ui, sans-serif; text-transform: uppercase; }
+.capture-key { font: italic 600 21px/1 var(--font-heading); text-transform: uppercase; }
 .capture-action {
-  font: 400 10px/1 "Barlow", system-ui, sans-serif;
+  font: 400 10px/1 var(--font-body);
   letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.5;
 }
 .warn {
   background: var(--accent-ink); color: var(--on-dark); padding: 12px 14px;
-  font: 400 12.5px/1.5 "Barlow", system-ui, sans-serif;
+  font: 400 12.5px/1.5 var(--font-body);
 }
 .res-list { display: flex; flex-direction: column; }
 .res-item {
@@ -481,10 +489,10 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 }
 .res-item:last-child { border-bottom: 0; }
 .res-item > span:first-child { display: flex; align-items: center; gap: 11px; }
-.res-item-name { display: block; font: 600 19px/1 "Barlow Condensed", system-ui, sans-serif; }
+.res-item-name { display: block; font: italic 600 19px/1 var(--font-heading); }
 .res-item-size {
   display: block; margin-top: 3px;
-  font: 400 10.5px/1 "Barlow", system-ui, sans-serif; color: var(--ink-55);
+  font: 400 10.5px/1 var(--font-body); color: var(--ink-55);
 }
 .dot-radio {
   width: 15px; height: 15px; display: block; border-radius: 50%;
@@ -493,7 +501,7 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 .dot-radio[data-radio="true"] {
   border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 3.5px var(--page);
 }
-.wiz-note { padding: 13px 14px; font: 400 12px/1.5 "Barlow", system-ui, sans-serif; color: var(--ink-70); }
+.wiz-note { padding: 13px 14px; font: 400 12px/1.5 var(--font-body); color: var(--ink-70); }
 .wiz-note strong { font-weight: 700; }
 .wizbar {
   flex: none; border-top: 1px solid var(--ink-16); padding: 13px 22px;
@@ -515,8 +523,8 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
   border: 1px solid var(--ink-16); border-top: 3px solid var(--accent);
   box-shadow: var(--shadow-lg);
 }
-.modal-title { font: 600 24px/1.05 "Barlow Condensed", system-ui, sans-serif; }
-.modal-body { margin: 0; font: 400 13px/1.55 "Barlow", system-ui, sans-serif; color: var(--ink-70); }
+.modal-title { font: italic 600 24px/1.05 var(--font-heading); }
+.modal-body { margin: 0; font: 400 13px/1.55 var(--font-body); color: var(--ink-70); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
 .modal-actions .btn {
   min-width: 96px; justify-content: center;
@@ -527,7 +535,7 @@ input[type="range"] { width: 100%; height: 22px; accent-color: var(--accent); }
 /* — problems — */
 .problems {
   background: var(--accent-ink); color: var(--on-dark); padding: 11px 13px; flex: none;
-  font: 400 12.5px/1.5 "Barlow", system-ui, sans-serif;
+  font: 400 12.5px/1.5 var(--font-body);
 }
 .problems ul { margin: 0; padding-left: 17px; }
 /* diagnose_region writes a monitor layout across several lines; collapsing

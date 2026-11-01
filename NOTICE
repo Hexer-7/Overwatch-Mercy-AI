@@ -4,7 +4,10 @@ https://github.com/Hexer-7/Overwatch-Mercy-AI
 
 Licensed under the Apache License, Version 2.0 (see LICENSE).
 
-This product includes the Barlow and Barlow Condensed typefaces,
-Copyright 2017 The Barlow Project Authors (https://github.com/jpt/barlow),
+This product includes the Jost typeface,
+Copyright 2020 The Jost Project Authors (https://github.com/indestructible-type/Jost),
 licensed under the SIL Open Font License, Version 1.1
-(see mercy_ai/ui/web/_ds/fonts/OFL.txt).
+(see mercy_ai/ui/web/_ds/fonts/OFL-Jost.txt).
+
+This product includes the Big Noodle Titling typeface,
+Copyright 2002 Sentinel Type / James Arboghast.

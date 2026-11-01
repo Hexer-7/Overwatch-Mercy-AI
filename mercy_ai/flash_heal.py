@@ -22,6 +22,17 @@ Neither health trigger fires while the grenade is seen: they wait it out, and
 the beam stays on the damage boost it switched to.  This holds with the switch
 to damage boost turned off too: the grenade is still watched for Flash Heal.
 
+**Not while the scoreboard is open.**  Holding it open covers the health ring,
+which reads like a fall.  While the loop reports the scoreboard key down
+(:mod:`mercy_ai.scoreboard`) nothing fires and nothing is read, the grenade
+included; the beam keeps switching between heal and damage boost as usual.  The
+key comes up, and ``scoreboard_delay`` (0.1 s) after, while the scoreboard fades
+out -- it does not vanish at once, and a half-gone scoreboard scores like a
+fallen ring.  Then the first frame that shows the ring again is compared with
+the last one before the key went down: a fall of ``drop`` (Emergency) or a
+score under the line (Normal) fires at once.  No settling wait beyond that,
+because the beam never let go -- it was only hidden.
+
 **Only with the staff out.**  Flash Heal's key does something else the rest of
 the time: with the Caduceus Blaster in hand it reloads the gun, and on another
 hero it is that hero's key.  The loop reports whether the staff is seen
@@ -65,6 +76,7 @@ __all__ = [
     "EXPIRY_MAX_HEALTH",
     "FLASH_HOLD",
     "LOW_HEALTH_REARM",
+    "RECHECK_WINDOW",
     "REFIRE_GAP",
     "FlashAction",
     "FlashHealPlanner",
@@ -99,6 +111,11 @@ EXPIRY_MAX_HEALTH = 0.5
 #: can fire again.  Without it a score wobbling on the line would fire on
 #: every dip.
 LOW_HEALTH_REARM = 0.05
+
+#: How long after the scoreboard closes the planner waits for the ring and the
+#: staff to show again before giving up on the comparison.  Not a delay: the
+#: comparison runs on the first frame that shows both, normally the very first.
+RECHECK_WINDOW = 0.25
 
 #: The two ways the health trigger can work.
 HEALTH_MODES = ("emergency", "low")
@@ -154,6 +171,7 @@ class FlashHealPlanner:
         self.settle: float = float(config.flash_heal_settle)
         self.max_fall_rate: float = float(config.flash_heal_max_fall_rate)
         self.blank_floor: float = float(config.flash_heal_blank_floor)
+        self.scoreboard_delay: float = float(config.flash_heal_scoreboard_delay)
         self.key_configured: bool = bool(config.flash_heal_btn)
 
         self.state = FlashState.IDLE
@@ -172,6 +190,12 @@ class FlashHealPlanner:
         self._low_fired = False  # fired for this dip; cleared above the line
         self._no_staff = False  # standing down because the staff is not seen
         self._fire_before: float | None = None  # _last_fire before the latest press
+        self._last_good: float | None = None  # latest settled, visible health score
+        self._menu = False  # the scoreboard key is down
+        self._menu_before: float | None = None  # _last_good when it went down
+        self._menu_broken = False  # the beam let go while it was down
+        self._recheck_until: float | None = None  # compare with _menu_before until then
+        self._menu_until: float | None = None  # key up: still covered until then
 
     # -- introspection ----------------------------------------------------- #
 
@@ -206,6 +230,8 @@ class FlashHealPlanner:
             return "off"
         if self._no_staff:
             return "held (no staff)"
+        if self._menu:
+            return "held (scoreboard)"
         now = self._clock() if now is None else now
         if self.state is FlashState.COOLDOWN and self._last_fire is not None:
             waiting = max(self.cooldown, REFIRE_GAP) - (now - self._last_fire)
@@ -227,18 +253,32 @@ class FlashHealPlanner:
         boosting: bool,
         health: float = 0.0,
         staff: bool = True,
+        menu: bool = False,
     ) -> FlashAction:
         """Advance one frame and say what to do.
 
         *staff* is False while the staff is not seen: nothing fires then.
+        *menu* is True while the scoreboard key is down: nothing fires or is
+        read then, and the health is compared once it comes up.
         """
         if not self.enabled:
             return FlashAction()
 
         self._track_healing(now, healing)
-        self._track_health(now, healing, health)
-        self._track_low(healing, health)
-        rising, falling = self._debounce(bomb_present)
+        menu = self._covered(now, menu)
+        if menu:
+            self._in_menu(now, healing)
+            rising = falling = False
+        else:
+            if self._menu:
+                self._leave_menu(now)
+            self._track_health(now, healing, health)
+            self._track_low(healing, health)
+            self._note_good(now, healing, health)
+            rising, falling = self._debounce(bomb_present)
+            if self._recheck_until is not None and now > self._recheck_until:
+                log.debug("flash: the ring did not show again after the scoreboard")
+                self._recheck_until = None
 
         # A held key is released purely on elapsed time, before anything else,
         # so a state change can never strand it down.
@@ -249,7 +289,14 @@ class FlashHealPlanner:
                 return FlashAction(release=True)
             return FlashAction()
 
+        if menu:
+            return FlashAction()
+
         if not staff:
+            # The scoreboard can cover the weapon icon too: give it the same
+            # moment to come back as the ring before standing down.
+            if self._recheck_until is not None:
+                return FlashAction()
             self._stand_down()
             return FlashAction()
         self._no_staff = False
@@ -276,7 +323,13 @@ class FlashHealPlanner:
         # would also drop the boost the grenade switched to. A first unconfirmed
         # frame counts too -- erring late is safe.
         if self._bomb_confirmed or self._seen > 0:
+            self._recheck_until = None
             return FlashAction()
+
+        if self._recheck_until is not None:
+            action = self._recheck(now, healing, boosting, health)
+            if action is not None:
+                return action
 
         if self.on_health_drop and self.health_mode == "low":
             if self._low_and_settled(now):
@@ -336,6 +389,12 @@ class FlashHealPlanner:
         self._watching_since = None
         self._below = 0
         self._low_fired = False
+        self._last_good = None
+        self._menu = False
+        self._menu_before = None
+        self._menu_broken = False
+        self._recheck_until = None
+        self._menu_until = None
         if self.state is FlashState.HOLDING:
             self.state = FlashState.COOLDOWN
 
@@ -345,6 +404,86 @@ class FlashHealPlanner:
         """Forget what was seen; the staff is not out, so it described no beam."""
         self._no_staff = True
         self.reset()
+
+    def _note_good(self, now: float, healing: bool, health: float) -> None:
+        """Remember the latest score worth comparing with after the scoreboard.
+
+        Settled, so the beam's connect sweep is not taken for the ally's health,
+        and above ``blank_floor``, so a ring the scoreboard is already covering
+        on the frame the key went down is not either.
+        """
+        settled = (
+            healing
+            and self._watching_since is not None
+            and now - self._watching_since >= self.settle
+        )
+        if not healing:
+            self._last_good = None
+        elif settled and health > self.blank_floor:
+            self._last_good = health
+
+    def _covered(self, now: float, held: bool) -> bool:
+        """True while the scoreboard is down or still fading out after it."""
+        if held:
+            self._menu_until = None
+            return True
+        if not self._menu:
+            return False
+        if self._menu_until is None:
+            self._menu_until = now + self.scoreboard_delay
+        return now < self._menu_until
+
+    def _in_menu(self, now: float, healing: bool) -> None:
+        """The scoreboard key is down: keep the last good score, read nothing."""
+        if not self._menu:
+            self._menu = True
+            self._menu_before = self._last_good
+            self._menu_broken = False
+            self._recheck_until = None
+            log.debug("flash: scoreboard open, health before %s", self._menu_before)
+        if not healing:
+            # The beam let go, so whatever shows afterwards may be another ally.
+            self._menu_broken = True
+            self._track_health(now, False, 0.0)
+            self._track_low(False, 0.0)
+            self._last_good = None
+
+    def _leave_menu(self, now: float) -> None:
+        """The scoreboard key came up: compare on the first frame the ring shows."""
+        self._menu = False
+        self._menu_until = None
+        # Samples from before the scoreboard are not a window to fall within.
+        self._history.clear()
+        if self.on_health_drop and not self._menu_broken and self._menu_before is not None:
+            self._recheck_until = now + RECHECK_WINDOW
+
+    def _recheck(
+        self, now: float, healing: bool, boosting: bool, health: float
+    ) -> FlashAction | None:
+        """Compare with the health before the scoreboard; ``None`` when done."""
+        if not healing or self._menu_before is None:
+            self._recheck_until = None
+            return None
+        if health <= self.blank_floor:
+            return FlashAction()  # still covered: wait for the ring
+        low = self.health_mode == "low"
+        if low:
+            fell = health < self.low_health and not self._low_fired
+        else:
+            fell = self._menu_before - health >= self.drop
+        if not fell:
+            self._recheck_until = None
+            return None
+        if self._may_fire(now, healing, boosting, per_grenade=False):
+            self._recheck_until = None
+            self._history.clear()
+            if low:
+                self._low_fired = True
+            return self._fire(now, "low health" if low else "health drop")
+        if boosting:
+            return FlashAction(force_heal_mode=True)  # fire once heal mode lands
+        self._recheck_until = None
+        return None
 
     def _debounce(self, bomb_present: bool) -> tuple[bool, bool]:
         """Return ``(rising, falling)`` edges of the *confirmed* grenade state."""

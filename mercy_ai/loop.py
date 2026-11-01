@@ -20,8 +20,12 @@ reloads the gun, and on another hero it is that hero's key.  ``weapon`` (a
 :class:`~mercy_ai.weapon.StaffWatch`) is asked every frame while Flash Heal is
 on, and again right before a press.
 
+While the scoreboard key is down (``scoreboard``, a
+:class:`~mercy_ai.scoreboard.ScoreboardKey`) Flash Heal decides nothing; the beam
+keeps switching between heal and damage boost as usual.
+
 Every external dependency is injected: ``clock=``, ``sleep=``, ``score=``,
-``capture``, ``controller``, ``focus_gate`` and ``weapon``.  With fakes for these the loop
+``capture``, ``controller``, ``focus_gate``, ``weapon`` and ``scoreboard``.  With fakes for these the loop
 runs deterministically with no screen, keyboard or game, and each
 :meth:`ControlLoop.step` returns a :class:`StepOutcome` describing exactly what
 it did.
@@ -102,6 +106,8 @@ class StepOutcome:
     no_staff: bool = False
     #: A press was asked for but held back because the staff was not out.
     flash_held: bool = False
+    #: The scoreboard key was down, so Flash Heal decided nothing this frame.
+    scoreboard: bool = False
 
 
 class ControlLoop:
@@ -120,6 +126,7 @@ class ControlLoop:
         flash_key: Any = None,
         focus_gate: Any | None = None,
         weapon: Any | None = None,
+        scoreboard: Any | None = None,
         clock: Callable[[], float] | None = None,
         sleep: Callable[[float], None] | None = None,
         status: Callable[..., None] | None = None,
@@ -135,6 +142,7 @@ class ControlLoop:
         self.flash_key = flash_key
         self.focus_gate = focus_gate
         self.weapon = weapon
+        self.scoreboard = scoreboard
         # perf_counter is monotonic and sub-microsecond.  time.time is the wall
         # clock: an NTP correction can move it backwards, making the elapsed time
         # negative and freezing the action cooldown until the clock catches up.
@@ -240,6 +248,7 @@ class ControlLoop:
         flash_now = self._clock()
         watch = self.weapon if self.flash.enabled else None
         no_staff = watch is not None and not watch.staff_out(flash_now)
+        menu = self.scoreboard is not None and self.flash.enabled and self.scoreboard.held()
         flash = self.flash.update(
             now=flash_now,
             bomb_present=bomb >= self.config.bomb_threshold,
@@ -247,6 +256,7 @@ class ControlLoop:
             boosting=self.damage_boost,
             health=health,
             staff=not no_staff,
+            menu=menu,
         )
         if flash.force_heal_mode:
             boost_wanted = False
@@ -332,6 +342,7 @@ class ControlLoop:
             flash_reason=None if flash_held else flash.reason,
             no_staff=no_staff,
             flash_held=flash_held,
+            scoreboard=menu,
             pressed=tuple(pressed),
             released=tuple(released_keys),
         )

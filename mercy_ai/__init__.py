@@ -10,7 +10,7 @@ from __future__ import annotations
 
 #: The one place the version is written. pyproject.toml and the exe's version
 #: resource (mercy_ai.spec) both read it from here.
-__version__ = "1.5.2"
+__version__ = "1.5.3"
 
 __author__ = "Hexer-7"
 __copyright__ = "Copyright (c) 2024-2026 Hexer-7"

@@ -422,6 +422,7 @@ def _build_real_loop(
         remove_hooks,
     )
     from ..loop import ControlLoop
+    from ..scoreboard import ScoreboardKey
     from ..state import State
     from ..weapon import StaffWatch
 
@@ -514,6 +515,14 @@ def _build_real_loop(
                 lambda: grabber.grab(weapon_region),
                 threshold=config.flash_heal_weapon_threshold,
             )
+        # Read once a frame with GetAsyncKeyState; only for Flash Heal.
+        scoreboard = (
+            ScoreboardKey(config.scoreboard_btn)
+            if config.flash_heal_enabled
+            and config.flash_heal_scoreboard_hold
+            and config.scoreboard_btn
+            else None
+        )
         loop = (loop_factory or ControlLoop)(
             assets=assets,
             config=config,
@@ -525,6 +534,7 @@ def _build_real_loop(
             flash_key=flash_key,
             focus_gate=FocusGate() if config.focus_gate else None,
             weapon=weapon,
+            scoreboard=scoreboard,
             status=hub.record,
         )
     except BaseException:

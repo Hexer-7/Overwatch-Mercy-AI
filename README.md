@@ -94,6 +94,7 @@ change a setting in Mercy AI or restart it.
 | `flash_heal_max_fall_rate` | 60 | 0 to 500 | Falls faster than this are ignored as a covered screen. 0 turns it off. |
 | `flash_heal_blank_floor` | 0.02 | 0 to 0.5 | Health readings at or below this are ignored. 0 turns it off. |
 | `flash_heal_weapon_threshold` | 0.6 | 0 to 1 | How sure the match must be before the staff counts as in your hand. |
+| `flash_heal_scoreboard_delay` | 0.1 | 0 to 1 | Seconds Flash Heal keeps waiting after you let go of the scoreboard key. Raise it if Flash Heal fires the moment the scoreboard closes. |
 
 </details>
 

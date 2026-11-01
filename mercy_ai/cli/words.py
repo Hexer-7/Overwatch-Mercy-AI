@@ -14,6 +14,7 @@ from typing import Any
 
 from ..config import threshold_translator
 from ..config_schema import MOUSE_TRIGGERS
+from ..ui.model import UNBINDABLE_KEY
 
 __all__ = [
     "default_words",
@@ -33,7 +34,7 @@ __all__ = [
 ]
 
 RESOLUTION_NAMES = {"2160": "4K", "1440": "2K", "1080": "FHD", "768": "HD+"}
-UNBINDABLE = "That key cannot be used. Try a letter, a digit or an F key."
+UNBINDABLE = UNBINDABLE_KEY
 
 
 def key_name(key: str | None) -> str:
@@ -201,7 +202,7 @@ def default_words(field: str, config: dict[str, Any]) -> str:
         return "on" if value else "off"
     if field == "keybind_btn":
         return trigger_label(value)
-    if field in ("pause_toggle_button", "flash_heal_btn"):
+    if field in ("pause_toggle_button", "flash_heal_btn", "scoreboard_btn"):
         return key_name(value)
     if isinstance(value, str):
         return value[:1].upper() + value[1:]
@@ -217,6 +218,12 @@ def _taken_keys(config: dict[str, Any]) -> list[tuple[str, str]]:
         (
             config.get("flash_heal_btn") or "" if config.get("flash_heal_enabled") else "",
             "your Flash Heal key",
+        ),
+        (
+            config.get("scoreboard_btn") or ""
+            if config.get("flash_heal_enabled") and config.get("flash_heal_scoreboard_hold")
+            else "",
+            "your scoreboard key",
         ),
         (config.get("keybind_btn") or "", "your trigger"),
     ]

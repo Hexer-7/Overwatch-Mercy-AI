@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from dataclasses import field as _field
 from typing import Any
 
-from .. import __copyright__
 from ..winutil import elevation_warning
 from .state import TABS, Data, UIState
 from .style import Style
@@ -78,6 +77,8 @@ CLI_FIELDS = frozenset(
         "flash_heal_low_health",
         "flash_heal_drop",
         "flash_heal_staff_check",
+        "flash_heal_scoreboard_hold",
+        "scoreboard_btn",
         "dynamic_heal",
         "dynamic_heal_drop",
     }
@@ -141,6 +142,10 @@ CAPTURE_PROMPTS = {
         "Set the Flash Heal key",
         "Press the key you bound to Mercy's Flash Heal in Overwatch.",
     ),
+    "scoreboard_btn": (
+        "Set the scoreboard key",
+        "Press the key you hold in Overwatch to see the scoreboard.",
+    ),
     "keybind_btn": ("Trigger (hold to run)", "Press the keyboard key you will hold in game."),
 }
 
@@ -150,6 +155,7 @@ KEY_LABELS = {
     "keybind_btn": "Trigger",
     "pause_toggle_button": "Pause key",
     "flash_heal_btn": "Flash Heal key",
+    "scoreboard_btn": "Scoreboard key",
 }
 
 TRIGGER_CHOICES = (("left_mouse", "Mouse Left click"), ("right_mouse", "Mouse Right click"))
@@ -532,6 +538,7 @@ def _advanced_rows(state: UIState, data: Data, style: Style, width: int) -> list
     rows.append(trigger)
     rows.append(_key_row(state, data, "pause_toggle_button", "Pause key"))
     rows.append(_key_row(state, data, "flash_heal_btn", "Flash Heal key (in game)"))
+    rows.append(_key_row(state, data, "scoreboard_btn", "Scoreboard key (in game)"))
     note = resolution_note(config, env)
     rows.append(
         Row(
@@ -630,6 +637,11 @@ def _advanced_rows(state: UIState, data: Data, style: Style, width: int) -> list
                     )
                 )
         rows.append(_toggle_row(state, data, "flash_heal_staff_check", "Only with the staff out"))
+        rows.append(
+            _toggle_row(
+                state, data, "flash_heal_scoreboard_hold", "Wait while the scoreboard is open"
+            )
+        )
     else:
         rows.append(
             _text(
@@ -732,7 +744,7 @@ def _about_rows(state: UIState, data: Data, style: Style, width: int) -> list[Ro
             [
                 "",
                 "   " + style.bold("Mercy AI"),
-                f"   Version {data.version} {g.middot} free and open source",
+                f"   Version {data.version}",
                 "",
             ]
             + _para(lede, width)
@@ -754,16 +766,7 @@ def _about_rows(state: UIState, data: Data, style: Style, width: int) -> list[Ro
                 label_width=13,
             )
         )
-    copyright_line = __copyright__.replace("Copyright (c)", g.copyright)
-    rows.append(
-        _text(
-            [
-                "",
-                f"   Thx to {style.claude('Claude')}.",
-                f"   {copyright_line} {g.middot} Apache License 2.0",
-            ]
-        )
-    )
+    rows.append(_text(["", f"   Thx to {style.claude('Claude')}."]))
     return rows
 
 

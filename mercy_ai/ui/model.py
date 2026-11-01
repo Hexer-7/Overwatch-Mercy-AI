@@ -32,6 +32,7 @@ __all__ = [
     "FIELD_TAGS",
     "FIELD_TYPES",
     "UI_RANGES",
+    "UNBINDABLE_KEY",
     "config_to_ui",
     "describe_settings",
     "normalise_key",
@@ -70,6 +71,8 @@ FIELD_TYPES: dict[str, type] = {
     "flash_heal_low_health": float,
     "flash_heal_drop": float,
     "flash_heal_staff_check": bool,
+    "flash_heal_scoreboard_hold": bool,
+    "scoreboard_btn": str,
     "dynamic_heal": bool,
     "dynamic_heal_drop": float,
     "theme": str,
@@ -152,6 +155,12 @@ CAPTIONS: dict[str, str] = {
     "flash_heal_staff_check": "Casts Flash Heal only while you hold the staff. With the "
     "blaster its key reloads, and on another hero it is that hero's key. Turn off only if "
     "Flash Heal never fires with the staff out.",
+    "flash_heal_scoreboard_hold": "While you hold {key} the scoreboard covers your ally's "
+    "health ring, which can look like a sudden fall, so Flash Heal waits. A tenth of a second "
+    "after you let go, once the scoreboard is gone, it casts if their health fell by your "
+    "emergency amount (Emergency) or is below your line (Normal). Healing and damage boost "
+    "keep switching as usual. Change the key under Controls.",
+    "scoreboard_btn": "The key you hold in Overwatch to see the scoreboard. Default Tab.",
     "flash_heal_drop": "How much your ally's health match must fall within 0.3 seconds to "
     "count as an emergency, on the same 0 to 1 scale as the health bar on Status: 0.5 is "
     "half of it. Lower fires on smaller hits, higher only on big ones. "
@@ -177,6 +186,12 @@ def describe_settings() -> dict[str, str]:
     }
     described.update(CAPTIONS)
     return described
+
+
+def _with_keys(described: dict[str, str], config: Config) -> dict[str, str]:
+    """Name the player's own scoreboard key where a caption mentions it."""
+    key = _key_name(config.scoreboard_btn) if config.scoreboard_btn else "the scoreboard key"
+    return {field: text.replace("{key}", key) for field, text in described.items()}
 
 
 def _plain(value: float) -> str:
@@ -255,7 +270,7 @@ def config_to_ui(config: Config) -> dict[str, Any]:
         flash_heal_enabled=config.flash_heal_enabled,
         resolutions=list(RESOLUTIONS),
         resolution_sizes=dict(RESOLUTION_SIZES),
-        descriptions=describe_settings(),
+        descriptions=_with_keys(describe_settings(), config),
         ranges={field: [low, high] for field, (low, high, _name) in UI_RANGES.items()},
         defaults=setting_defaults(),
     )
@@ -303,10 +318,17 @@ _KEY_LABELS: dict[str, str] = {
     "keybind_btn": "trigger",
     "pause_toggle_button": "pause key",
     "flash_heal_btn": "Flash Heal key",
+    "scoreboard_btn": "scoreboard key",
 }
 
 #: Turning Flash Heal on is, for clash purposes, choosing its key.
 _FLASH_SWITCHES = frozenset({"flash_heal_trigger", "flash_heal_on_health_drop"})
+
+#: Keys a switch can bring into use: what to call them, and where they are set.
+_SWITCHED_KEYS: dict[str, tuple[str, str]] = {
+    "flash_heal_btn": ("Flash Heal key", "Controls"),
+    "scoreboard_btn": ("scoreboard key", "Flash Heal"),
+}
 
 
 def _key_name(key: str) -> str:
@@ -341,9 +363,15 @@ def settings_problems(
     bindings = ["heal_btn", "damage_boost_btn", "keybind_btn", "pause_toggle_button"]
     if config.flash_heal_enabled:
         bindings.append("flash_heal_btn")
+        # Read with GetAsyncKeyState, which also sees the keys Mercy AI itself
+        # holds: shared with one of them it would always read as held.
+        if config.flash_heal_scoreboard_hold:
+            bindings.append("scoreboard_btn")
     chosen = set(changed)
     if chosen & _FLASH_SWITCHES:
-        chosen.add("flash_heal_btn")
+        chosen.update(("flash_heal_btn", "scoreboard_btn"))
+    if "flash_heal_scoreboard_hold" in chosen:
+        chosen.add("scoreboard_btn")
 
     for i, first in enumerate(bindings):
         for second in bindings[i + 1 :]:
@@ -357,11 +385,12 @@ def settings_problems(
                 problems.append(f"Heal and damage boost are both {name}. Pick two different keys.")
             elif (first in chosen) != (second in chosen):
                 new, old = (first, second) if first in chosen else (second, first)
-                if new == "flash_heal_btn" and new not in changed:
+                if new in _SWITCHED_KEYS and new not in changed:
                     # Turned on by its switch: the key itself lives elsewhere.
+                    label, where = _SWITCHED_KEYS[new]
                     problems.append(
-                        f"{name} is already your {_KEY_LABELS[old]}. Pick a different Flash "
-                        f"Heal key under Settings > Advanced > Controls, or change your "
+                        f"{name} is already your {_KEY_LABELS[old]}. Pick a different "
+                        f"{label} under Settings > Advanced > {where}, or change your "
                         f"{_KEY_LABELS[old]}."
                     )
                     continue
@@ -432,6 +461,14 @@ _CODES: dict[str, str] = {
 #: library cannot press, so accepting it would produce a config that looks fine
 #: and does nothing.
 _REJECTED = ("Meta", "OS", "ContextMenu", "Numpad")
+
+
+#: What to say when a key cannot be bound. Names the other keys that can,
+#: so nobody takes "a letter or a digit" to mean only letters and digits.
+UNBINDABLE_KEY = (
+    "That key cannot be used. Pick a letter, a digit, an F key, or a key such as Home, "
+    "End, Page Up, Insert, Delete, Tab, Space or an arrow. Number pad keys can't be used."
+)
 
 
 def normalise_key(code: str, key: str = "") -> str | None:

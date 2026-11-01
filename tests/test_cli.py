@@ -197,11 +197,12 @@ def test_claude_is_written_in_claudes_orange():
     assert "\x1b[33;38;2;217;119;87mClaude\x1b[0m" in "\n".join(lines)
 
 
-def test_about_names_the_developer_and_the_copyright():
+def test_about_names_the_developer():
     state = UIState(tab=3)
     text = "\n".join(render(state, sample_data(), Style(color=False)).lines)
-    for words in ("_1_B", "Hexer-7", "Overwatch-Mercy-AI", "Thx to Claude.", "2024-2026 Hexer-7"):
+    for words in ("_1_B", "Hexer-7", "Overwatch-Mercy-AI", "Thx to Claude."):
         assert words in text
+    assert "Apache" not in text and "open source" not in text
 
 
 def test_a_long_problem_wraps_inside_the_screen():
@@ -325,7 +326,7 @@ FLASH_ON = {"flash_heal_trigger": "expiry", "flash_heal_on_health_drop": True}
 
 
 def test_a_typed_number_is_saved_and_a_bad_one_is_explained(tmp_path):
-    keys = ["2", "end", "enter"] + ["down"] * 10 + ["enter", "0", ".", "9", "enter"]
+    keys = ["2", "end", "enter"] + ["down"] * 11 + ["enter", "0", ".", "9", "enter"]
     config = Config(resolution="1440", **KEYS, **FLASH_ON)
     app, console, path = make_app(tmp_path, keys, config=config)
     text = drive(app, console)
@@ -404,7 +405,7 @@ def test_advanced_says_to_try_changes_in_the_practice_range():
 
 def test_flash_heal_picks_emergency_or_normal_under_advanced(tmp_path):
     config = Config(resolution="1440", **KEYS, **FLASH_ON)
-    keys = ["2", "end", "enter"] + ["down"] * 9 + ["right"]
+    keys = ["2", "end", "enter"] + ["down"] * 10 + ["right"]
     app, console, path = make_app(tmp_path, keys, config=config)
     text = drive(app, console)
     assert "After Ana's grenade" in text
@@ -416,7 +417,7 @@ def test_flash_heal_picks_emergency_or_normal_under_advanced(tmp_path):
 
 def test_the_ana_switch_turns_only_the_grenade_trigger_off(tmp_path):
     config = Config(resolution="1440", **KEYS, **FLASH_ON)
-    keys = ["2", "end", "enter"] + ["down"] * 7 + ["enter"]
+    keys = ["2", "end", "enter"] + ["down"] * 8 + ["enter"]
     app, console, path = make_app(tmp_path, keys, config=config)
     drive(app, console)
     saved = read_config(path)

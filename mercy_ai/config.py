@@ -40,7 +40,7 @@ __all__ = [
 ]
 
 #: Bumped whenever a key is added.  Purely informational; migration is by key.
-CONFIG_VERSION = 5
+CONFIG_VERSION = 6
 
 THRESHOLD_MIN, THRESHOLD_MAX = 1.0, 10.0
 NCC_MIN, NCC_MAX = 0.2, 0.99
@@ -84,6 +84,12 @@ class Config:
     #: the blaster or is another hero's ability.
     flash_heal_staff_check: bool = True
     flash_heal_weapon_threshold: float = 0.6
+    #: Hold Flash Heal while the scoreboard covers the health ring, and compare
+    #: the health with just before it opened once it closes.
+    flash_heal_scoreboard_hold: bool = True
+    scoreboard_btn: str = "tab"
+    #: How long the scoreboard takes to fade out once its key comes up.
+    flash_heal_scoreboard_delay: float = 0.1
 
     # -- Appearance and smooth healing ------------------------------------ #
     theme: str = "light"
@@ -317,6 +323,14 @@ def read_config(path: Path) -> Config:
         flash_heal_weapon_threshold=number(
             "flash_heal_weapon_threshold", DEFAULTS["flash_heal_weapon_threshold"]
         ),
+        flash_heal_scoreboard_hold=_text(
+            root, "flash_heal_scoreboard_hold", DEFAULTS["flash_heal_scoreboard_hold"]
+        )
+        != "0",
+        scoreboard_btn=_text(root, "scoreboard_btn", DEFAULTS["scoreboard_btn"]),
+        flash_heal_scoreboard_delay=number(
+            "flash_heal_scoreboard_delay", DEFAULTS["flash_heal_scoreboard_delay"]
+        ),
         theme=_theme(_text(root, "theme", DEFAULTS["theme"])),
         dynamic_heal=_text(root, "dynamic_heal", DEFAULTS["dynamic_heal"]) == "1",
         dynamic_heal_drop=number("dynamic_heal_drop", DEFAULTS["dynamic_heal_drop"]),
@@ -366,6 +380,9 @@ def config_to_xml(config: Config) -> ET.Element:
         "flash_heal_blank_floor": _format_number(config.flash_heal_blank_floor),
         "flash_heal_staff_check": "1" if config.flash_heal_staff_check else "0",
         "flash_heal_weapon_threshold": _format_number(config.flash_heal_weapon_threshold),
+        "flash_heal_scoreboard_hold": "1" if config.flash_heal_scoreboard_hold else "0",
+        "scoreboard_btn": config.scoreboard_btn,
+        "flash_heal_scoreboard_delay": _format_number(config.flash_heal_scoreboard_delay),
         "theme": config.theme,
         "dynamic_heal": "1" if config.dynamic_heal else "0",
         "dynamic_heal_drop": _format_number(config.dynamic_heal_drop),

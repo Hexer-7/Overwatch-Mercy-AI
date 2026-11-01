@@ -62,6 +62,9 @@ DEFAULTS: dict[str, str] = {
     "flash_heal_blank_floor": "0.02",
     "flash_heal_staff_check": "1",
     "flash_heal_weapon_threshold": "0.6",
+    "flash_heal_scoreboard_hold": "1",
+    "scoreboard_btn": "tab",
+    "flash_heal_scoreboard_delay": "0.1",
     "theme": "light",
     "dynamic_heal": "0",
     "dynamic_heal_drop": "0.15",
@@ -206,6 +209,23 @@ COMMENTS: dict[str, str] = {
         "and white backgrounds included: the staff scores 0.84 to 1.0, the blaster never "
         "above 0.54. Lower it if Flash Heal is held back with the staff out."
     ),
+    "flash_heal_scoreboard_hold": (
+        "Hold Flash Heal while the scoreboard key is down: the scoreboard covers the "
+        "health ring, which would read as a fall. On release it compares the ally's "
+        "health with just before the key went down and casts if it fell by "
+        "flash_heal_drop (Emergency) or is below flash_heal_low_health (Normal). The "
+        "beam keeps switching between heal and damage boost meanwhile. 1 = on "
+        "(default), 0 = off. Only used while Flash Heal is on."
+    ),
+    "scoreboard_btn": (
+        "In-game key that holds the scoreboard open. Default tab, which is the game's "
+        "own default. Only used while flash_heal_scoreboard_hold is 1."
+    ),
+    "flash_heal_scoreboard_delay": (
+        "Seconds Flash Heal keeps waiting after the scoreboard key comes up, while the "
+        "scoreboard fades out: half gone, it can read like a fall. 0.0 - 1.0. Default 0.1. "
+        "Raise it if Flash Heal fires the moment you let go of the scoreboard."
+    ),
     "flash_heal_drop": (
         "How far the health score must fall to count as an emergency, 0.1 to 0.85. "
         "Default 0.5. Values near 1.0 can never fire. Only used when "
@@ -246,6 +266,9 @@ FIELD_ORDER = (
     "flash_heal_blank_floor",
     "flash_heal_staff_check",
     "flash_heal_weapon_threshold",
+    "flash_heal_scoreboard_hold",
+    "scoreboard_btn",
+    "flash_heal_scoreboard_delay",
     "theme",
     "dynamic_heal",
     "dynamic_heal_drop",
@@ -273,6 +296,7 @@ LIMITS: dict[str, tuple[str, float, float]] = {
     "flash_heal_settle": ("flash_heal_settle", 0.0, 5.0),
     "flash_heal_max_fall_rate": ("flash_heal_max_fall_rate", 0.0, 500.0),
     "flash_heal_blank_floor": ("flash_heal_blank_floor", 0.0, 0.5),
+    "flash_heal_scoreboard_delay": ("flash_heal_scoreboard_delay", 0.0, 1.0),
     "flash_heal_weapon_threshold": ("flash_heal_weapon_threshold", 0.0, 1.0),
     "dynamic_heal_drop": ("dynamic_heal_drop", 0.0, 1.0),
 }

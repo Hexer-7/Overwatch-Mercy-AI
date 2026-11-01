@@ -52,7 +52,6 @@ class Glyphs:
     dash: str
     middot: str
     ellipsis: str
-    copyright: str
     path: str
 
 
@@ -85,7 +84,6 @@ UNICODE = Glyphs(
     dash="—",
     middot="·",
     ellipsis="…",
-    copyright="©",
     path="→",
 )
 
@@ -118,7 +116,6 @@ ASCII = Glyphs(
     dash="-",
     middot="-",
     ellipsis="...",
-    copyright="(c)",
     path=">",
 )
 

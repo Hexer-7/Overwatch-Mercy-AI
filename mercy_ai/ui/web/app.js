@@ -380,7 +380,9 @@ function defaultWords(field) {
   const value = (config.defaults || {})[field];
   if (typeof value === "boolean") { return value ? "on" : "off"; }
   if (field === "keybind_btn") { return triggerLabel(value); }
-  if (field === "pause_toggle_button" || field === "flash_heal_btn") { return keyName(value); }
+  if (field === "pause_toggle_button" || field === "flash_heal_btn" || field === "scoreboard_btn") {
+    return keyName(value);
+  }
   if (typeof value === "string") { return value.charAt(0).toUpperCase() + value.slice(1); }
   return String(value);
 }
@@ -418,9 +420,27 @@ function renderHelp() {
     '<div class="check-item" data-ok="' + ok + '">' + (ok ? TICK : CROSS)
     + "<span>" + escapeHtml(text) + "</span></div>").join("");
 
-  /* The setup steps name the player's actual keys, not an example. */
-  ["helpHealKey", "helpHealKey2"].forEach((id) => { $(id).textContent = config.heal_btn || "not set"; });
-  ["helpBoostKey", "helpBoostKey2"].forEach((id) => { $(id).textContent = config.damage_boost_btn || "not set"; });
+  /* The setup steps name the player's actual keys, not an example: in full
+     in the sentence, and as a keyboard prints them on the little keycaps. */
+  ["helpHealKey2"].forEach((id) => { $(id).textContent = config.heal_btn || "not set"; });
+  ["helpBoostKey2"].forEach((id) => { $(id).textContent = config.damage_boost_btn || "not set"; });
+  keycap($("helpHealKey"), config.heal_btn);
+  keycap($("helpBoostKey"), config.damage_boost_btn);
+}
+
+/* What a keyboard prints on a key whose name is too long for a keycap. */
+const KEYCAP_LABELS = {
+  "insert": "Ins", "delete": "Del", "home": "Home", "end": "End",
+  "page up": "PgUp", "page down": "PgDn", "space": "Spc", "backspace": "Bksp",
+  "enter": "Ent", "caps lock": "Caps", "shift": "Shift", "ctrl": "Ctrl", "alt": "Alt",
+  "esc": "Esc", "tab": "Tab", "up": "\u2191", "down": "\u2193", "left": "\u2190", "right": "\u2192",
+};
+
+function keycap(node, key) {
+  const label = KEYCAP_LABELS[key] || (key ? key.toUpperCase() : "?");
+  node.textContent = label;
+  /* Longer labels drop a size so two keycaps still sit side by side. */
+  node.setAttribute("data-long", String(label.length > 2));
 }
 
 /* ── key capture ────────────────────────────────────────────────────────── */
@@ -585,6 +605,8 @@ function takenKeys() {
   return [
     [config.pause_toggle_button, "your pause key"],
     [config.flash_heal_enabled ? config.flash_heal_btn : "", "your Flash Heal key"],
+    [config.flash_heal_enabled && config.flash_heal_scoreboard_hold ? config.scoreboard_btn : "",
+     "your scoreboard key"],
     [config.keybind_btn, "your trigger"],
   ].filter(([key]) => key && !String(key).endsWith("_mouse"));
 }
@@ -770,7 +792,7 @@ async function boot() {
  *
  * `document.fonts.ready` is the right signal anyway. It does not depend on a
  * paint, and without it the interface assembles itself in stages: text drawn
- * in the fallback face, then reflowed when Barlow arrives. Waiting for it means the first frame the user ever sees is the
+ * in the fallback face, then reflowed when the real faces arrive. Waiting for it means the first frame the user ever sees is the
  * finished one. The race is a guarantee that a font that never loads cannot
  * hold the window shut. */
 function reveal() {

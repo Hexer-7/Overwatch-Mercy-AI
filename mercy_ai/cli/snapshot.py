@@ -19,6 +19,7 @@ from ..ui.model import config_to_ui
 from .state import Data, Edit, Message, Modal, Setup, UIState
 from .style import ASCII, UNICODE, Style
 from .text import cell_width, strip_ansi
+from .words import UNBINDABLE
 
 __all__ = ["check_frame", "render_all_screens", "sample_data", "sample_screens"]
 
@@ -99,6 +100,11 @@ def sample_screens() -> list[tuple[str, UIState, Data]]:
             UIState(tab=1, advanced=True, focus={"advanced": "flash_heal_staff_check"}),
             everything,
         ),
+        (
+            "advanced, scoreboard",
+            UIState(tab=1, advanced=True, focus={"advanced": "scoreboard_btn"}),
+            everything,
+        ),
         ("help", UIState(tab=2), main),
         ("about", UIState(tab=3), main),
         ("setup 1", UIState(screen="setup", setup=Setup(step=1, resolution="1440")), first),
@@ -115,6 +121,11 @@ def sample_screens() -> list[tuple[str, UIState, Data]]:
         (
             "key capture",
             UIState(tab=1, modal=Modal("capture", field="pause_toggle_button")),
+            main,
+        ),
+        (
+            "key capture, refused",
+            UIState(tab=1, modal=Modal("capture", field="pause_toggle_button", problem=UNBINDABLE)),
             main,
         ),
         (

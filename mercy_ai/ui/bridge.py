@@ -34,6 +34,7 @@ from .. import __version__
 from ..config import Config, config_to_xml, read_config, write_config_atomic
 from ..errors import MercyAIError
 from .model import (
+    UNBINDABLE_KEY,
     config_to_ui,
     normalise_key,
     range_problems,
@@ -406,7 +407,7 @@ class Bridge:
         if name is None:
             return {
                 "ok": False,
-                "problems": ["That key cannot be used. Try a letter, a digit or an F key."],
+                "problems": [UNBINDABLE_KEY],
             }
         return {"ok": True, "key": name}
 

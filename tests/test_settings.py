@@ -70,10 +70,13 @@ SHIPPED = {
     "flash_heal_blank_floor": "0.02",
     "flash_heal_staff_check": "1",
     "flash_heal_weapon_threshold": "0.6",
+    "flash_heal_scoreboard_hold": "1",
+    "scoreboard_btn": "tab",
+    "flash_heal_scoreboard_delay": "0.1",
     "theme": "light",
     "dynamic_heal": "0",
     "dynamic_heal_drop": "0.15",
-    "config_version": "5",
+    "config_version": "6",
 }
 
 

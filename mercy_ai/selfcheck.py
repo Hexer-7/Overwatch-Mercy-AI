@@ -35,6 +35,7 @@ BUNDLED_MODULES = (
     "mercy_ai.cli.app",
     "mercy_ai.cli.console",
     "mercy_ai.cli.capture",
+    "mercy_ai.scoreboard",
 )
 
 
@@ -65,6 +66,15 @@ def self_check(report: Path | None = None) -> int:
                 raise FileNotFoundError(WEB_DIR / name)
 
     record("ui/web", page)
+
+    def scoreboard_key() -> None:
+        from .scoreboard import ScoreboardKey
+
+        # Tab by its table entry, and a key that needs MapVirtualKeyW.
+        for name in ("tab", "`"):
+            ScoreboardKey(name).held()
+
+    record("scoreboard key", scoreboard_key)
 
     def templates(resolution: str) -> None:
         from .assets import load_assets
